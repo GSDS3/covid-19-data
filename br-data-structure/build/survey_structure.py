@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-보고서 1건의 '구조 조사'(structural survey).  셀 단위 의미 판별을 하지 않고, 골격 검증에 필요한 만큼만 본다.
+보고서 1건의 '구조 조사'(structural survey). 셀 단위 의미 판별을 하지 않고, 골격 검증에 필요한 만큼만 본다.
 
-입력:  DART 뷰어 wrapper.html (또는 acquisition.json 의 wrapper_toc) + 본문 HTML (이미지 내장본 또는 원 응답)
-출력:  inputs/reports/BRxxxx/structure.json
-  - identity        회사·사업연도·접수번호
-  - toc             wrapper 목차(레벨·제목)와 본문 앵커 위치(줄바꿈 포함 코드포인트 기준)
-  - sections        각 목차 항목의 템플릿 노드 대응(id), 범위, 표·셀·문단·그림 수, 소제목
-  - tables          표 카탈로그: 소속 절, 직전 캡션(제목), 단위 표기, 머리글 행, 행·열 수, 병합 여부
-  - unmatched       템플릿에 대응되지 않은 목차 항목(골격 개정 후보)
+입력 형식 두 가지
+  --html + --wrapper|--acquisition : DART 뷰어 본문 HTML(이미지 내장본 또는 원 응답) + wrapper 목차
+  --xml                            : OpenDART document.xml 로 받은 공시서류 원본 XML (dart3.xsd: SECTION-1/2/3, TITLE ATOC="Y", TABLE-GROUP)
 
-사용:  python3 build/survey_structure.py BR0043 --html path/to/body.html --wrapper path/to/wrapper.html \
-           --company 신영증권 --year 2023 --receipt 2023xxxxxxxxxx [--sector 금융(증권)]
+출력: inputs/reports/BRxxxx/structure.json
+  identity / toc / sections(템플릿 노드 대응, 범위, 표·셀·문단·그림 수, 소제목) / tables(표 카탈로그) / unmatched / stats
+
+사용
+  python3 build/survey_structure.py BR0043 --xml inputs/raw/BR0043/2023xxxxxxxxxx.xml --company 신영증권 --year 2023 --receipt 2023xxxxxxxxxx --sector "금융(증권)" --period "2022-04-01~2023-03-31"
+  python3 build/survey_structure.py BR0001 --html html/BR0001_....html --wrapper evidence/BR0001/wrapper.html ...
 """
-import re, json, os, sys, html as htmlmod, argparse, collections, hashlib
+import re, json, os, sys, html as htmlmod, argparse, collections, hashlib, bisect
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -49,7 +49,7 @@ NOTE_KW = [
     ("성격별", "N22"), ("판매비", "N22"), ("판관비", "N22"), ("매출액", "N21"), ("매출원가", "N21"), ("수익", "N21"),
     ("법인세", "N19"), ("정부보조금", "N18"), ("종업원급여", "N17"), ("퇴직급여", "N17"), ("확정급여", "N17"), ("주식기준보상", "N17"),
     ("우발", "N16"), ("약정", "N16"), ("충당부채", "N16"), ("배출부채", "N16"),
-    ("차입금", "N15"), ("사채", "N15"), ("금융부채", "N15"), ("리스", "N15"),
+    ("차입금", "N15"), ("차입부채", "N15"), ("차입", "N15"), ("사채", "N15"), ("금융부채", "N15"), ("리스", "N15"),
     ("매입채무", "N14"), ("지급채무", "N14"), ("계약부채", "N14"), ("기타부채", "N14"), ("미지급", "N14"),
     ("매각예정", "N13"), ("중단영업", "N13"), ("처분자산집단", "N13"), ("기타자산", "N13"),
     ("투자부동산", "N12"), ("무형자산", "N11"), ("영업권", "N11"), ("유형자산", "N10"), ("사용권", "N10"),
@@ -122,7 +122,9 @@ def match_l3(l2id, text):
             return c["id"] if c else None
     return None
 
-# ----------------------------------------------------------------- parsing
+HEAD_PAT = re.compile(r"^(?:\(?\d{1,2}\)|\d{1,2}\)|[가-힣]\.|\d{1,2}-\d{1,2}\.|\[[^\]]{2,60}\]|[①-⑳]|\(\d{1,2}-\d{1,2}\))")
+
+# ----------------------------------------------------------------- source parsers
 def parse_wrapper(w):
     toc = []
     for m in re.finditer(r"var (node(\d))\s*=\s*\{\};(.*?)(?=var node\d\s*=\s*\{\};|function |$)", w, flags=re.S):
@@ -131,20 +133,12 @@ def parse_wrapper(w):
         t = g("text")
         if not t:
             continue
-        toc.append({"level": lvl, "text": htmlmod.unescape(t.group(1)).strip(), "id": (g("id") or [None])[1] if g("id") else None,
+        toc.append({"level": lvl, "text": htmlmod.unescape(t.group(1)).strip(), "id": g("id").group(1) if g("id") else None,
                     "eleId": g("eleId").group(1) if g("eleId") else None, "offset": int(g("offset").group(1)) if g("offset") else None, "length": int(g("length").group(1)) if g("length") else None})
     return toc
 
-HEAD_PAT = re.compile(r"^(?:\(?\d{1,2}\)|\d{1,2}\)|[가-힣]\.|\d{1,2}-\d{1,2}\.|\[[^\]]{2,60}\]|[①-⑳]|\(\d{1,2}-\d{1,2}\))")
-
-def survey(sample_id, html_path, wrapper_path=None, toc_json=None, company=None, year=None, receipt=None, sector=None, period=None):
-    raw = open(html_path, "rb").read()
-    s = raw.decode("utf-8", errors="replace")   # 줄바꿈 포함 코드포인트 기준(nodes.jsonl 과 동일)
-    sha = hashlib.sha256(raw).hexdigest()
-    if toc_json:
-        toc = [{"level": 1 if re.match(r"^([IVX]+\.|사\s*업|【)", t["text"]) else (3 if re.match(r"^\d+-\d+\.|^\d{1,2}\.\s*[^.]*\(연결\)", t["text"]) else 2), **t} for t in toc_json]
-    else:
-        toc = parse_wrapper(open(wrapper_path, encoding="utf-8", errors="replace", newline="").read())
+def headings_html(s, toc):
+    """뷰어 HTML: wrapper 목차를 본문 앵커(<A name='tocN'>)와 XBRL 표그룹 제목에 순서대로 맞춘다."""
     anchors = [(m.start(), strip_tags(m.group(2))) for m in re.finditer(r"<A name='toc(\d+)'>(.*?)</A>", s, flags=re.S | re.I)]
     xbrl = [(m.start(), strip_tags(m.group(1))) for m in re.finditer(r"<P class='table-group-xbrl'>(.*?)</P>", s, flags=re.S)]
     secs = []; ai = 0
@@ -167,6 +161,57 @@ def survey(sample_id, html_path, wrapper_path=None, toc_json=None, company=None,
         cands = [(p, tx) for p, tx in xbrl if pstart <= p < pend and norm(tx) == norm(sec["text"])]
         if cands:
             sec["pos"] = cands[0][0]; sec["src"] = "xbrl_heading"
+    return secs
+
+def decode_xml(raw):
+    m = re.match(rb"\s*<\?xml[^>]*encoding=['\"]([\w-]+)['\"]", raw)
+    encs = [m.group(1).decode("ascii")] if m else []
+    for enc in encs + ["utf-8", "cp949", "euc-kr"]:
+        try:
+            return raw.decode(enc), enc
+        except (UnicodeDecodeError, LookupError):
+            continue
+    return raw.decode("utf-8", errors="replace"), "utf-8?"
+
+def headings_xml(s):
+    """OpenDART 원본 XML: SECTION-1/2/3 안의 TITLE(ATOC=Y) 로 목차·위치를 만든다.
+    표지(COVER-TITLE)는 L1 '사업보고서'로, III.3/III.5 안의 TABLE-GROUP TITLE '1. …' 은 L3(주석)로 둔다."""
+    secs = []
+    m = re.search(r"<COVER-TITLE[^>]*>(.*?)</COVER-TITLE>", s, flags=re.S | re.I)
+    if m:
+        secs.append({"level": 1, "text": strip_tags(m.group(1)), "pos": m.start(), "src": "cover_title"})
+    for m in re.finditer(r"<SECTION-(\d)\b[^>]*>\s*<TITLE\b([^>]*)>(.*?)</TITLE>", s, flags=re.S | re.I):
+        lvl = int(m.group(1)); attrs = m.group(2); text = strip_tags(m.group(3))
+        if "ATOC=\"N\"" in attrs.upper().replace("'", "\"") and lvl > 1:
+            continue
+        secs.append({"level": lvl, "text": text, "pos": m.start(), "src": f"section-{lvl}"})
+    # 주석 L3: III.3 / III.5 범위 안의 TABLE-GROUP TITLE 중 'n. …' 형식
+    secs.sort(key=lambda x: x["pos"])
+    note_ranges = []
+    for i, x in enumerate(secs):
+        if x["level"] == 2 and re.search(r"재무제표\s*주석", x["text"]):
+            end = next((y["pos"] for y in secs[i + 1:] if y["level"] <= 2), len(s))
+            note_ranges.append((x["pos"], end))
+    extra = []
+    for m in re.finditer(r"<TABLE-GROUP\b[^>]*>\s*<TITLE\b[^>]*>(.*?)</TITLE>", s, flags=re.S | re.I):
+        if any(a <= m.start() < b for a, b in note_ranges):
+            t = strip_tags(m.group(1))
+            if re.match(r"^\d{1,2}\.\s*\S", t):
+                extra.append({"level": 3, "text": t, "pos": m.start(), "src": "table_group_title"})
+    secs.extend(extra); secs.sort(key=lambda x: x["pos"])
+    # 같은 위치·제목 중복 제거
+    out = []; seen = set()
+    for x in secs:
+        k = (x["level"], norm(x["text"]), x["pos"])
+        if k not in seen:
+            seen.add(k); out.append(x)
+    return out
+
+# ----------------------------------------------------------------- common survey
+def run_survey(sample_id, s, secs, src_kind, meta):
+    for x in secs:
+        if x.get("pos") is None:
+            x["end"] = None
     withpos = [(i, x) for i, x in enumerate(secs) if x["pos"] is not None]
     for k, (i, x) in enumerate(withpos):
         end = len(s)
@@ -187,12 +232,10 @@ def survey(sample_id, html_path, wrapper_path=None, toc_json=None, company=None,
         x["node"] = nid
         if nid is None:
             unmatched.append({"level": x["level"], "text": x["text"], "parent_node": cur2 if x["level"] == 3 else (cur1 if x["level"] == 2 else None)})
-    # structure counts and sub-headings straight from HTML
-    tables_all = [(m.start(), m.end()) for m in re.finditer(r"<TABLE\b.*?</TABLE>", s, flags=re.S | re.I)]
+    tables_all = [(m.start(), m.end()) for m in re.finditer(r"<TABLE\b(?!-GROUP).*?</TABLE>", s, flags=re.S | re.I)]
     tstarts = [a for a, b in tables_all]
-    import bisect
     def paragraphs(seg):
-        return [strip_tags(m.group(1)) for m in re.finditer(r"<P[^>]*>(.*?)</P>", seg, flags=re.S | re.I)]
+        return [strip_tags(m.group(1)) for m in re.finditer(r"<P\b[^>]*>(.*?)</P>", seg, flags=re.S | re.I)]
     for x in secs:
         if x["pos"] is None:
             x["counts"] = None; x["subheads"] = []; continue
@@ -200,9 +243,8 @@ def survey(sample_id, html_path, wrapper_path=None, toc_json=None, company=None,
         lo = bisect.bisect_left(tstarts, x["pos"]); hi = bisect.bisect_left(tstarts, x["end"])
         cells = sum(len(re.findall(r"<T[DH]\b", s[a:b], flags=re.I)) for a, b in tables_all[lo:hi])
         paras = paragraphs(seg)
-        x["counts"] = {"table": hi - lo, "cell": cells, "paragraph": sum(1 for p in paras if p), "image": len(re.findall(r"<IMG\b", seg, flags=re.I))}
+        x["counts"] = {"table": hi - lo, "cell": cells, "paragraph": sum(1 for p in paras if p), "image": len(re.findall(r"<IMG\b|<IMAGE\b", seg, flags=re.I))}
         x["subheads"] = [p for p in paras if 2 < len(p) < 70 and HEAD_PAT.match(p) and not p.startswith("(단위") and not p.startswith("(기준일")]
-    # table catalog (deepest section containing the table)
     def deepest(pos):
         best = None
         for x in secs:
@@ -210,13 +252,12 @@ def survey(sample_id, html_path, wrapper_path=None, toc_json=None, company=None,
                 if best is None or x["level"] >= best["level"]:
                     best = x
         return best
-    catalog = []
-    # 표 사이 '틈'의 문단(표 안의 <P>는 제외)에서 캡션·단위·기준일을 찾는다.
-    # DART 는 '(단위 : ...)'/'(기준일 : ...)'/'[표제]' 를 데이터 표 직전의 작은 nb 표에 넣는 경우가 많다.
+    # table catalog
     parsed = []
     for a, b in tables_all:
         tb = s[a:b]
-        kind = "layout" if ("class='nb'" in tb[:80] or 'class="nb"' in tb[:80]) else "data"
+        head = tb[:120]
+        kind = "layout" if ("class='nb'" in head or 'class="nb"' in head or re.search(r"ACLASS=['\"]?(NB|COVER|TITLE)", head, flags=re.I)) else "data"
         rows = re.findall(r"<TR\b.*?</TR>", tb, flags=re.S | re.I)
         head_rows = []
         for r in rows[:3]:
@@ -227,67 +268,84 @@ def survey(sample_id, html_path, wrapper_path=None, toc_json=None, company=None,
         merged = bool(re.search(r"(rowspan|colspan)=['\"]?[2-9]", tb, flags=re.I))
         flat = " ".join(" ".join(h) for h in head_rows).strip()
         parsed.append({"a": a, "b": b, "kind": kind, "rows": len(rows), "ncols": ncols, "merged": merged, "head_rows": head_rows, "flat": flat})
-    prev_end = 0
-    pending_meta = {"unit": None, "basedate": None, "caption": None}
-    for i, t in enumerate(parsed):
+    catalog = []; prev_end = 0; pending = {"unit": None, "basedate": None, "caption": None}
+    for t in parsed:
         gap = s[prev_end:t["a"]]
-        gap_ps = [strip_tags(m.group(1)) for m in re.finditer(r"<P[^>]*>(.*?)</P>", gap, flags=re.S | re.I)]
-        gap_ps = [p for p in gap_ps if p]
-        for p in gap_ps:
-            if p.startswith("(단위"):
-                pending_meta["unit"] = p
-            elif p.startswith("(기준일"):
-                pending_meta["basedate"] = p
+        # 틈의 문단(HTML <P>) 과 XML 의 TABLE-GROUP/TITLE, TU(단위) 를 모두 캡션 후보로 본다
+        gap_ps = [strip_tags(m.group(1)) for m in re.finditer(r"<(?:P|TITLE|TU)\b[^>]*>(.*?)</(?:P|TITLE|TU)>", gap, flags=re.S | re.I)]
+        for p in [p for p in gap_ps if p]:
+            if p.startswith("(단위") or re.match(r"^\(?단위\s*[:：]", p):
+                pending["unit"] = p
+            elif p.startswith("(기준일") or re.match(r"^\(?기준일", p):
+                pending["basedate"] = p
             elif len(p) < 90:
-                pending_meta["caption"] = p
+                pending["caption"] = p
         prev_end = t["b"]
-        # 메타용 작은 nb 표: 단위/기준일/[표제]만 담고 있으면 다음 데이터 표의 메타로 넘긴다
         if t["kind"] == "layout" and t["rows"] <= 2 and t["ncols"] <= 4:
             f = t["flat"]
             if not f:
                 continue
             if "(단위" in f:
-                pending_meta["unit"] = re.search(r"\(단위[^)]*\)", f).group(0) if re.search(r"\(단위[^)]*\)", f) else f
+                mm = re.search(r"\(단위[^)]*\)", f); pending["unit"] = mm.group(0) if mm else f
             if "(기준일" in f or "현재]" in f or "현재)" in f:
-                m = re.search(r"\(기준일[^)]*\)|\[[^\]]*현재\]|\([^)]*현재\)", f)
-                pending_meta["basedate"] = m.group(0) if m else f
+                mm = re.search(r"\(기준일[^)]*\)|\[[^\]]*현재\]|\([^)]*현재\)", f); pending["basedate"] = mm.group(0) if mm else f
             if f.startswith("[") or f.startswith("【"):
-                pending_meta["caption"] = f
+                pending["caption"] = f
             if "(단위" in f or "(기준일" in f or f.startswith("[") or "현재" in f:
                 continue
-        if t["kind"] == "layout" and t["ncols"] <= 3 and t["rows"] <= 12 and not pending_meta["caption"]:
+        if t["kind"] == "layout" and t["ncols"] <= 3 and t["rows"] <= 12 and not pending["caption"]:
             continue
         if t["kind"] == "layout" and t["rows"] == 1 and t["ncols"] == 1:
-            # 각주(※ ...) 한 칸짜리 nb 표는 직전 데이터 표의 각주로 취급
             if catalog and t["flat"].startswith("※"):
                 catalog[-1].setdefault("footnotes", []).append(t["flat"][:300])
             continue
         sec = deepest(t["a"])
         catalog.append({"pos": t["a"], "section": sec["text"] if sec else None, "node": sec["node"] if sec else None, "kind": t["kind"],
-                        "caption": pending_meta["caption"], "unit": pending_meta["unit"], "basedate": pending_meta["basedate"],
+                        "caption": pending["caption"], "unit": pending["unit"], "basedate": pending["basedate"],
                         "n_rows": t["rows"], "n_cols": t["ncols"], "merged": t["merged"], "header_rows": t["head_rows"][:2]})
-        pending_meta = {"unit": None, "basedate": None, "caption": None}
-    out = {"identity": {"sample_id": sample_id, "company": company, "fiscal_year": year, "receipt_id": receipt, "sector": sector, "period": period,
-                        "html_sha256": sha, "html_chars": len(s), "html_bytes": len(raw)},
+        pending = {"unit": None, "basedate": None, "caption": None}
+    out = {"identity": dict(meta, sample_id=sample_id, source_kind=src_kind),
            "survey": {"kind": "structural_survey", "depth": "toc_alignment+section_counts+subheads+table_catalog; no cell-level semantic review"},
-           "toc": [{k: t.get(k) for k in ("level", "text", "id", "offset", "length")} for t in toc],
+           "toc": [{"level": x["level"], "text": x["text"], "src": x.get("src")} for x in secs],
            "sections": [{k: x.get(k) for k in ("level", "text", "pos", "end", "src", "node", "counts", "subheads")} for x in secs],
-           "unmatched": unmatched,
-           "tables": catalog,
+           "unmatched": unmatched, "tables": catalog,
            "stats": {"sections": len(secs), "aligned": sum(1 for x in secs if x["node"]), "with_pos": sum(1 for x in secs if x["pos"] is not None),
                      "tables_total": len(tables_all), "tables_cataloged": len(catalog), "unmatched": len(unmatched)}}
     return out
 
+def survey_html(sample_id, html_path, wrapper_path=None, toc_json=None, **meta):
+    raw = open(html_path, "rb").read(); s = raw.decode("utf-8", errors="replace")   # 줄바꿈 포함 코드포인트 기준
+    if toc_json:
+        toc = toc_json
+    else:
+        toc = parse_wrapper(open(wrapper_path, encoding="utf-8", errors="replace", newline="").read())
+    secs = headings_html(s, toc)
+    meta.update({"html_sha256": hashlib.sha256(raw).hexdigest(), "html_chars": len(s), "html_bytes": len(raw), "source_path": os.path.relpath(html_path, ROOT) if html_path.startswith(ROOT) else html_path})
+    return run_survey(sample_id, s, secs, "viewer_html", meta)
+
+def survey_xml(sample_id, xml_path, **meta):
+    raw = open(xml_path, "rb").read(); s, enc = decode_xml(raw)
+    secs = headings_xml(s)
+    meta.update({"html_sha256": hashlib.sha256(raw).hexdigest(), "html_chars": len(s), "html_bytes": len(raw), "xml_encoding": enc, "source_path": os.path.relpath(xml_path, ROOT) if xml_path.startswith(ROOT) else xml_path})
+    return run_survey(sample_id, s, secs, "opendart_xml", meta)
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("sample_id"); ap.add_argument("--html", required=True); ap.add_argument("--wrapper"); ap.add_argument("--acquisition")
+    ap.add_argument("sample_id"); ap.add_argument("--html"); ap.add_argument("--wrapper"); ap.add_argument("--acquisition"); ap.add_argument("--xml")
     ap.add_argument("--company"); ap.add_argument("--year", type=int); ap.add_argument("--receipt"); ap.add_argument("--sector"); ap.add_argument("--period")
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
-    toc_json = None
-    if not a.wrapper and a.acquisition:
-        toc_json = json.load(open(a.acquisition, encoding="utf-8")).get("wrapper_toc")
-    res = survey(a.sample_id, a.html, a.wrapper, toc_json, a.company, a.year, a.receipt, a.sector, a.period)
+    meta = {"company": a.company, "fiscal_year": a.year, "receipt_id": a.receipt or None, "sector": a.sector, "period": a.period}
+    if a.xml:
+        res = survey_xml(a.sample_id, a.xml, **meta)
+    elif a.html:
+        toc_json = json.load(open(a.acquisition, encoding="utf-8")).get("wrapper_toc") if (a.acquisition and not a.wrapper) else None
+        if toc_json:
+            for t in toc_json:   # acquisition.json 의 목차는 평면이므로 제목 형식으로 레벨을 추정
+                t["level"] = 1 if re.match(r"^([IVX]+\.|사\s*업|【)", t["text"]) else (3 if re.match(r"^\d+-\d+\.|^\d{1,2}\.\s.*\(연결\)$", t["text"]) else 2)
+        res = survey_html(a.sample_id, a.html, a.wrapper, toc_json, **meta)
+    else:
+        sys.exit("--xml 또는 --html 이 필요하다")
     out = a.out or os.path.join(ROOT, "inputs", "reports", a.sample_id, "structure.json")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     json.dump(res, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)

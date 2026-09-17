@@ -12,19 +12,25 @@
 셀 단위 의미 판별(초기 5건 방식, 보고서당 수만 셀)은 골격이 안정된 뒤 **표 유형 단위**로 재개한다.
 이유: 지금 목적은 골격의 검증·확장이며, 그 검증에 필요한 정보는 절 구성·표 유형·머리글이지 개별 셀의 문맥이 아니다.
 
-## 보고서 1건을 매다는 절차
+## 보고서 15건을 매다는 절차 (OpenDART API 경로, 권장)
 
-1. 원문 취득(DART 접근이 되는 환경에서): 뷰어 wrapper(`https://dart.fss.or.kr/dsaf001/main.do?rcpNo=…`)와 본문 문서 HTML.
-   초기 5건 패키지의 `evidence/BRxxxx/wrapper.html`, `evidence/BRxxxx/acquisition.json`(wrapper_toc), `html/BRxxxx_*.html` 형식이면 그대로 쓸 수 있다.
-2. 구조 조사:
-   ```bash
-   python3 build/survey_structure.py BR0043 --html html/BR0043_2023_001720_신영증권.html \
-       --wrapper evidence/BR0043/wrapper.html --company 신영증권 --year 2023 \
-       --receipt <접수번호> --sector "금융(증권)" --period "2022-04-01~2023-03-31"
-   ```
-   `--wrapper` 대신 `--acquisition evidence/BR0043/acquisition.json` 도 된다.
-3. `python3 build/build.py && python3 build/render_html.py` → `dist/index.html` 갱신.
-4. `structure.json` 의 `unmatched`(템플릿 미대응 목차 항목)와 시각화 ⑥ 탭의 'L3 개정 후보'를 보고 `build/author_skeleton.py` 의 템플릿(별칭·업종 변형·L3 항목)을 개정한 뒤 1~3을 재실행한다.
+OpenDART 키를 받았으나 이 실행환경은 `opendart.fss.or.kr` 도 차단(403 CONNECT)이라 실행하지 못했다. 키가 있고 접속되는 환경에서:
+
+```bash
+export OPENDART_API_KEY=…                 # 키는 환경변수로만. 파일·커밋 금지
+python3 build/acquire_opendart.py all     # corpcode → resolve → find → fetch → survey (pending 15건)
+python3 build/build.py && python3 build/render_html.py
+```
+
+단계별로 하려면 `corpcode / resolve / find / fetch / survey` 를 순서대로, 특정 건만 하려면 `… find BR0043 BR0082` 처럼 ID를 붙인다.
+- `resolve`: `inputs/raw/CORPCODE.xml` 로 종목코드(identity.json 의 참고값) → corp_code. 후보가 여럿이면 출력을 보고 identity.json 의 stock_code 를 고친다.
+- `find`: 사업연도 종료일부터 150일 창에서 A001 접수 목록을 받아 `사업보고서 (YYYY.MM)` 와 일치하는 최초 제출본을 고른다. 정정본은 `corrections` 에 기록만.
+- `fetch`: `document.xml` 원본 zip → `inputs/raw/BRxxxx/` (gitignore). 본문 XML 경로를 identity.json 에 기록.
+- `survey`: `survey_structure.py --xml` (dart3.xsd: SECTION-1/2/3·TITLE·TABLE-GROUP 파싱). 합성 샘플 `build/tests/sample_dart.xml` 로 파서를 시험했고 실제 API 응답으로는 아직 검증하지 못했다. 첫 실행 후 `structure.json` 의 `unmatched` 와 `with_pos/sections` 를 반드시 확인한다.
+
+뷰어 HTML 이 있는 경우(초기 5건 패키지 형식)는 종전대로 `--html … --wrapper …` 를 쓴다.
+
+4. `structure.json` 의 `unmatched`(템플릿 미대응 목차 항목)와 시각화 ⑥ 탭의 'L3 개정 후보'를 보고 `build/author_skeleton.py` 의 템플릿(별칭·업종 변형·L3 항목)을 개정한 뒤 `author_skeleton.py → build.py → render_html.py` 를 재실행한다.
 
 ## 15건에서 확인할 골격 가설 (identity.json 의 expected_variants)
 

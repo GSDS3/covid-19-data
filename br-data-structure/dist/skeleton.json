@@ -1,6 +1,6 @@
 {
  "meta": {
-  "generated_utc": "2026-09-17T02:09:57Z",
+  "generated_utc": "2026-09-17T02:23:55Z",
   "title": "사업보고서 공통 데이터체계 골격 v0.2",
   "reports": [
    {
@@ -218,10 +218,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -231,6 +231,8 @@
      "기재정정 보고서라면 정정 전후 계보가 원문 발생에 필요"
     ],
     "status": "pending",
+    "stock_code": "001720",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
     "id": "BR0043",
     "surveyed": false
    },
@@ -244,10 +246,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -257,6 +259,9 @@
      "XI.4 합병 사후정보/합병 예정 사항이 핵심 이벤트 노드"
     ],
     "status": "pending",
+    "stock_code": "377630",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
+    "identity_note": "스팩. 이후 합병 시 법인명이 바뀔 수 있어 corp_code 를 종목코드로 확인.",
     "id": "BR0021",
     "surveyed": false
    },
@@ -270,10 +275,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -282,6 +287,9 @@
      "회계기준(K-IFRS vs 본국 GAAP) 병기 여부와 통화 단위(USD) 문맥"
     ],
     "status": "pending",
+    "stock_code": "950130",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
+    "identity_note": "외국법인(미국 법인 상장). 종목코드 950130.",
     "id": "BR0100",
     "surveyed": false
    },
@@ -295,10 +303,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -307,6 +315,8 @@
      "외화 차입·리스부채 주석(N15)과 환위험(N04) 비중이 큼"
     ],
     "status": "pending",
+    "stock_code": "003490",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
     "id": "BR0002",
     "surveyed": false
    },
@@ -320,10 +330,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -332,6 +342,8 @@
      "연결범위가 매우 큼(XII.1 상세표 대형)"
     ],
     "status": "pending",
+    "stock_code": "000270",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
     "id": "BR0022",
     "surveyed": false
    },
@@ -345,10 +357,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -356,6 +368,8 @@
      "II.2/II.4 주종별 생산·판매 표, 주세 관련 서술(II.7 규제)"
     ],
     "status": "pending",
+    "stock_code": "000080",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
     "id": "BR0042",
     "surveyed": false
    },
@@ -369,10 +383,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -380,6 +394,9 @@
      "I.1.06 중견기업 표시, II.4 수출 비중, 판매보증(N16)"
     ],
     "status": "pending",
+    "stock_code": "000490",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
+    "identity_note": "구 대동공업. 현재 법인명 대동.",
     "id": "BR0062",
     "surveyed": false
    },
@@ -393,10 +410,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -405,6 +422,8 @@
      "N30 보험계약 주석의 IFRS17 문맥"
     ],
     "status": "pending",
+    "stock_code": "000810",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
     "id": "BR0081",
     "surveyed": false
    },
@@ -418,10 +437,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -430,6 +449,8 @@
      "금융부문 특유 항목이 II장 일반 서식 안에 섞여 기재될 가능성"
     ],
     "status": "pending",
+    "stock_code": "005380",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
     "id": "BR0003",
     "surveyed": false
    },
@@ -443,10 +464,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -454,6 +475,8 @@
      "II.3 생산능력·가동률 정의, N08 재고, XII.1 해외 종속회사"
     ],
     "status": "pending",
+    "stock_code": "000660",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
     "id": "BR0023",
     "surveyed": false
    },
@@ -467,10 +490,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -478,6 +501,8 @@
      "공기업 특유: 정부 규제·요금(II.7 규제), 종속회사 구분(발전자회사), 정부 출자(VII 최대주주=정부)"
     ],
     "status": "pending",
+    "stock_code": "015760",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
     "id": "BR0045",
     "surveyed": false
    },
@@ -491,10 +516,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -502,6 +527,8 @@
      "II.3 생산능력·가동률 정의, N08 재고, XII.1 해외 종속회사"
     ],
     "status": "pending",
+    "stock_code": "000660",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
     "id": "BR0063",
     "surveyed": false
    },
@@ -515,10 +542,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -528,6 +555,8 @@
      "기재정정 보고서라면 정정 전후 계보가 원문 발생에 필요"
     ],
     "status": "pending",
+    "stock_code": "001720",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
     "id": "BR0082",
     "surveyed": false
    },
@@ -541,10 +570,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -552,6 +581,9 @@
      "2022년 지주회사 전환 전 보고서: 법인 동일성(기업명 변경) 문맥이 I.2 연혁·후속사건에 걸침"
     ],
     "status": "pending",
+    "stock_code": "005490",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
+    "identity_note": "2022-03 지주회사 전환으로 현재 DART 법인명은 POSCO홀딩스. corp_code 는 동일 법인이며 2021년 보고서는 그 법인이 제출.",
     "id": "BR0004",
     "surveyed": false
    },
@@ -565,10 +597,10 @@
     "receipt_id": null,
     "acquisition": {
      "state": "not_acquired",
-     "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+     "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+     "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
      "needed": [
-      "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-      "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+      "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
      ]
     },
     "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
@@ -576,6 +608,8 @@
      "III.8.04 수주계약 현황(진행률·미청구공사) 표 존재 예상, XI.2 우발채무(PF 보증) 비중 큼"
     ],
     "status": "pending",
+    "stock_code": "000720",
+    "stock_code_source": "참고값(작성자 지식). acquire_opendart.py resolve 가 corpCode.xml 로 검증·갱신",
     "id": "BR0024",
     "surveyed": false
    }
@@ -5258,7 +5292,7 @@
     "xbrl": null,
     "scope": "common",
     "aliases": [],
-    "note": "제조·일반업 서식(1~7)과 금융업 서식(업종별 절 구성)이 다르다. 아래 1~7은 일반업, F1~F4는 보험업 관찰 변형.",
+    "note": "제조·일반업 서식(1~7)과 금융업 서식(업종별 절 구성)이 다르다. 아래 1~7은 일반업, F1~F4는 금융업 변형(보험 DB손해보험 2023에서 관찰; 증권·은행·여신 등도 같은 절 명칭을 쓰는 것으로 예상하며 신영증권 도착 시 검증).",
     "children": [
      {
       "code": "1",
@@ -10032,7 +10066,7 @@
      },
      {
       "code": "F1",
-      "title": "영업의 현황(보험업)",
+      "title": "영업의 현황(금융업)",
       "structures": [
        "table"
       ],
@@ -10040,11 +10074,11 @@
       "contexts": [],
       "api": [],
       "xbrl": null,
-      "scope": "industry:보험",
+      "scope": "industry:금융",
       "aliases": [
        "2. 영업의 현황"
       ],
-      "note": null,
+      "note": "보험(관찰)·증권·은행·여신전문 등 금융업 서식의 II장 2절. 하위 표는 업종별로 다르다(아래 01~04는 보험 관찰).",
       "children": [
        {
         "code": "01",
@@ -10510,7 +10544,7 @@
      },
      {
       "code": "F2",
-      "title": "파생상품거래 현황(보험업)",
+      "title": "파생상품거래 현황(금융업)",
       "structures": [
        "table"
       ],
@@ -10518,7 +10552,7 @@
       "contexts": [],
       "api": [],
       "xbrl": null,
-      "scope": "industry:보험",
+      "scope": "industry:금융",
       "aliases": [
        "3. 파생상품거래 현황"
       ],
@@ -10662,7 +10696,7 @@
      },
      {
       "code": "F3",
-      "title": "영업설비(보험업)",
+      "title": "영업설비(금융업)",
       "structures": [
        "table"
       ],
@@ -10670,7 +10704,7 @@
       "contexts": [],
       "api": [],
       "xbrl": null,
-      "scope": "industry:보험",
+      "scope": "industry:금융",
       "aliases": [
        "4. 영업설비"
       ],
@@ -10812,7 +10846,7 @@
      },
      {
       "code": "F4",
-      "title": "재무건전성 등 기타 참고사항(보험업)",
+      "title": "재무건전성 등 기타 참고사항(금융업)",
       "structures": [
        "table"
       ],
@@ -10820,11 +10854,11 @@
       "contexts": [],
       "api": [],
       "xbrl": null,
-      "scope": "industry:보험",
+      "scope": "industry:금융",
       "aliases": [
        "5. 재무건전성 등 기타 참고사항"
       ],
-      "note": null,
+      "note": "보험: K-ICS·보험계약·대출 운용(관찰). 증권: 순자본비율(NCR)·영업용순자본 등이 들어올 것으로 예상(미검증).",
       "children": [
        {
         "code": "01",
@@ -16443,7 +16477,7 @@
         "xbrl": "partial",
         "scope": "common",
         "aliases": [],
-        "note": "주제 유형. 실제 주석 제목은 회사별로 다르며 키워드로 대응: 차입금, 사채, 금융부채, 리스",
+        "note": "주제 유형. 실제 주석 제목은 회사별로 다르며 키워드로 대응: 차입금, 차입부채, 차입, 사채, 금융부채, 리스",
         "children": [],
         "id": "DT.A001.III.3.N15",
         "level": 3,
@@ -26348,7 +26382,7 @@
         "xbrl": "partial",
         "scope": "common",
         "aliases": [],
-        "note": "주제 유형. 실제 주석 제목은 회사별로 다르며 키워드로 대응: 차입금, 사채, 금융부채, 리스",
+        "note": "주제 유형. 실제 주석 제목은 회사별로 다르며 키워드로 대응: 차입금, 차입부채, 차입, 사채, 금융부채, 리스",
         "children": [],
         "id": "DT.A001.III.5.N15",
         "level": 3,
@@ -51183,6 +51217,8 @@
    "title": "차입금·사채·금융부채·리스부채",
    "keywords": [
     "차입금",
+    "차입부채",
+    "차입",
     "사채",
     "금융부채",
     "리스"
@@ -92634,10 +92670,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92658,10 +92694,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92682,10 +92718,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92705,10 +92741,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92728,10 +92764,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92751,10 +92787,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92773,10 +92809,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92795,10 +92831,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92818,10 +92854,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92841,10 +92877,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92863,10 +92899,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92885,10 +92921,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92907,10 +92943,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92931,10 +92967,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [
@@ -92953,10 +92989,10 @@
    "surveyed": false,
    "acquisition": {
     "state": "not_acquired",
-    "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+    "reason": "이 실행환경에서 dart.fss.or.kr·opendart.fss.or.kr 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않음.",
+    "path": "OpenDART API: build/acquire_opendart.py all (OPENDART_API_KEY 환경변수 필요) → 공시서류 원본 XML → survey_structure.py --xml",
     "needed": [
-     "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
-     "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+     "OPENDART_API_KEY 가 있는 접속 가능 환경에서 실행"
     ]
    },
    "expected_variants": [

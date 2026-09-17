@@ -1,6 +1,5 @@
 {
  "identity": {
-  "sample_id": "BR0016",
   "company": "선바이오",
   "fiscal_year": 2021,
   "receipt_id": "20220318000845",
@@ -8,7 +7,10 @@
   "period": "2021-01-01~2021-12-31",
   "html_sha256": "0196c31b66b6cc8fc4778bc0fd7bd44041e2c5b397084b1879561b80562134ff",
   "html_chars": 2883781,
-  "html_bytes": 3017989
+  "html_bytes": 3017989,
+  "source_path": "/tmp/claude-0/-home-user-covid-19-data/71c6555c-5ad7-5ce5-9b0d-de7d474d7846/scratchpad/extract/b62cd757-BR0016_saved_results/html/BR0016_2021_067370_선바이오.html",
+  "sample_id": "BR0016",
+  "source_kind": "viewer_html"
  },
  "survey": {
   "kind": "structural_survey",
@@ -18,359 +20,257 @@
   {
    "level": 1,
    "text": "사 업 보 고 서",
-   "id": "1",
-   "offset": 793,
-   "length": 4000
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "【 대표이사 등의 확인 】",
-   "id": "2",
-   "offset": 4873,
-   "length": 416
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "I. 회사의 개요",
-   "id": "3",
-   "offset": 5293,
-   "length": 57615
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "1. 회사의 개요",
-   "id": "4",
-   "offset": 5383,
-   "length": 8754
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "2. 회사의 연혁",
-   "id": "5",
-   "offset": 14141,
-   "length": 20734
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "3. 자본금 변동사항",
-   "id": "6",
-   "offset": 34879,
-   "length": 4883
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "4. 주식의 총수 등",
-   "id": "7",
-   "offset": 39766,
-   "length": 22712
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "5. 정관에 관한 사항",
-   "id": "8",
-   "offset": 62482,
-   "length": 412
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "II. 사업의 내용",
-   "id": "9",
-   "offset": 62912,
-   "length": 233729
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "1. 사업의 개요",
-   "id": "10",
-   "offset": 63250,
-   "length": 49842
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "2. 주요 제품 및 서비스",
-   "id": "11",
-   "offset": 113096,
-   "length": 11122
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "3. 원재료 및 생산설비",
-   "id": "12",
-   "offset": 124222,
-   "length": 38221
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "4. 매출 및 수주상황",
-   "id": "13",
-   "offset": 162447,
-   "length": 34269
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "5. 위험관리 및 파생거래",
-   "id": "14",
-   "offset": 196720,
-   "length": 352
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "6. 주요계약 및 연구개발활동",
-   "id": "15",
-   "offset": 197076,
-   "length": 67840
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "7. 기타 참고사항",
-   "id": "16",
-   "offset": 264920,
-   "length": 31681
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "III. 재무에 관한 사항",
-   "id": "17",
-   "offset": 296645,
-   "length": 352634
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "1. 요약재무정보",
-   "id": "18",
-   "offset": 296763,
-   "length": 10033
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "2. 연결재무제표",
-   "id": "19",
-   "offset": 307003,
-   "length": 126
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "3. 연결재무제표 주석",
-   "id": "20",
-   "offset": 307133,
-   "length": 129
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "4. 재무제표",
-   "id": "21",
-   "offset": 307266,
-   "length": 43040
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "5. 재무제표 주석",
-   "id": "22",
-   "offset": 350310,
-   "length": 233028
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "6. 배당에 관한 사항",
-   "id": "23",
-   "offset": 583368,
-   "length": 9701
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "7. 증권의 발행을 통한 자금조달에 관한 사항",
-   "id": "24",
-   "offset": 593073,
-   "length": 37889
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "8. 기타 재무에 관한 사항",
-   "id": "27",
-   "offset": 630966,
-   "length": 18299
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "IV. 이사의 경영진단 및 분석의견",
-   "id": "28",
-   "offset": 649283,
-   "length": 21931
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "V. 회계감사인의 감사의견 등",
-   "id": "29",
-   "offset": 671218,
-   "length": 13214
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "1. 외부감사에 관한 사항",
-   "id": "30",
-   "offset": 671347,
-   "length": 12806
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "2. 내부통제에 관한 사항",
-   "id": "31",
-   "offset": 684157,
-   "length": 261
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "VI. 이사회 등 회사의 기관에 관한 사항",
-   "id": "32",
-   "offset": 684436,
-   "length": 33201
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "1. 이사회에 관한 사항",
-   "id": "33",
-   "offset": 684549,
-   "length": 15310
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "2. 감사제도에 관한 사항",
-   "id": "34",
-   "offset": 699863,
-   "length": 9526
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "3. 주주총회 등에 관한 사항",
-   "id": "35",
-   "offset": 709393,
-   "length": 8230
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "VII. 주주에 관한 사항",
-   "id": "36",
-   "offset": 717641,
-   "length": 53155
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "VIII. 임원 및 직원 등에 관한 사항",
-   "id": "37",
-   "offset": 770800,
-   "length": 61751
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "1. 임원 및 직원 등의 현황",
-   "id": "38",
-   "offset": 770903,
-   "length": 20875
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "2. 임원의 보수 등",
-   "id": "39",
-   "offset": 791782,
-   "length": 40755
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "IX. 계열회사 등에 관한 사항",
-   "id": "40",
-   "offset": 832555,
-   "length": 8891
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "X. 대주주 등과의 거래내용",
-   "id": "41",
-   "offset": 841450,
-   "length": 197
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "XI. 그 밖에 투자자 보호를 위하여 필요한 사항",
-   "id": "42",
-   "offset": 841651,
-   "length": 12372
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "1. 공시내용 진행 및 변경사항",
-   "id": "43",
-   "offset": 841792,
-   "length": 2508
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "2. 우발부채 등에 관한 사항",
-   "id": "44",
-   "offset": 844304,
-   "length": 3366
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "3. 제재 등과 관련된 사항",
-   "id": "45",
-   "offset": 847674,
-   "length": 337
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "4. 작성기준일 이후 발생한 주요사항 등 기타사항",
-   "id": "46",
-   "offset": 848015,
-   "length": 5994
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "XII. 상세표",
-   "id": "47",
-   "offset": 854027,
-   "length": 16293
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "1. 연결대상 종속회사 현황(상세)",
-   "id": "48",
-   "offset": 854142,
-   "length": 4282
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "2. 계열회사 현황(상세)",
-   "id": "49",
-   "offset": 858428,
-   "length": 3225
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "3. 타법인출자 현황(상세)",
-   "id": "50",
-   "offset": 861657,
-   "length": 8649
+   "src": "anchor"
   },
   {
    "level": 1,
    "text": "【 전문가의 확인 】",
-   "id": "51",
-   "offset": 870324,
-   "length": 358
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "1. 전문가의 확인",
-   "id": "52",
-   "offset": 870416,
-   "length": 127
+   "src": "anchor"
   },
   {
    "level": 2,
    "text": "2. 전문가와의 이해관계",
-   "id": "53",
-   "offset": 870547,
-   "length": 121
+   "src": "anchor"
   }
  ],
  "sections": [

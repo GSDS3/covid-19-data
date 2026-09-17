@@ -38,7 +38,8 @@ DART 사업보고서(A001)를 대상으로, 전체 서비스(Data Lake → DWH �
 | 구조 조사(현재 방식) | 목차 정렬, 절별 표·셀·문단 수, 소제목, 표 카탈로그(캡션·단위·기준일·머리글·행열·병합) | `inputs/reports/BRxxxx/structure.json` | 5건 완료, 15건 미취득 |
 
 G01 나머지 15건은 골격 검증에 필요한 **구조 조사** 깊이로 진행한다. 절차와 가설은 `NEXT_ACTION.md`.
-이 실행환경에서는 DART 계열 호스트 접속이 조직 정책으로 차단되어 원문을 취득하지 못했다. `inputs/reports/BRxxxx/identity.json` 에 슬롯·필요 자료·예상 변형을 두었다.
+원문은 OpenDART API(`build/acquire_opendart.py`, 키는 `OPENDART_API_KEY` 환경변수)로 공시서류 원본 XML을 받아 `survey_structure.py --xml` 로 조사한다.
+이 실행환경에서는 `dart.fss.or.kr`·`opendart.fss.or.kr` 접속이 조직 egress 정책으로 차단되어 실행하지 못했고, `inputs/reports/BRxxxx/identity.json` 에 슬롯·종목코드 참고값·예상 변형을 두었다. API 키와 내려받은 원문(`inputs/raw/`)은 커밋하지 않는다.
 
 ## 재현
 
