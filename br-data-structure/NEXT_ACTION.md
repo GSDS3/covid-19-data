@@ -30,6 +30,23 @@ python3 build/build.py && python3 build/render_html.py
 
 뷰어 HTML 이 있는 경우(초기 5건 패키지 형식)는 종전대로 `--html … --wrapper …` 를 쓴다.
 
+### 대안: dart_bulk_download.py(사용자 보유 수집기) 로 받은 lake 사용
+
+`dart_bulk_download.py`(v1.2.0)가 만든 폴더(`manifest.sqlite3` + `raw/documents/YYYY/MM/DD/<접수번호>.zip`)는 그대로 쓸 수 있다.
+전체 A001 수집은 수천 건·수 GB·며칠이 걸리므로, **회사별로 좁은 접수일 창**만 받는다. 회사 고유번호(8자리)가 필요하며
+같은 `--out` 폴더에서는 회사 필터를 바꿀 수 없으므로 회사마다 `--out` 을 달리한다.
+
+```bash
+python3 build/from_lake.py --plan            # 15건의 회사별 실행 명령(접수일 창 = 사업연도 종료일 ~ +150일) 출력
+python dart_bulk_download.py run --out ./lake_BR0043 --corp-code 0XXXXXXX --start 20230331 --end 20230828 --export --wait-on-limit
+python3 build/from_lake.py --lake ./lake_BR0043 BR0043      # 원공시 선택, 정정본 기록, XML 추출, 구조 조사
+python3 build/build.py && python3 build/render_html.py
+```
+
+이미 받아둔 lake(예: 초기 100건 원본 실행 패키지의 원천)가 있으면 API 호출 없이 `from_lake.py --lake <폴더>` 만으로 15건을 찾는다.
+lake 에 목록만 있고 원문이 없으면 `listed_not_downloaded` 로 표시되며 `--mode download` 후 다시 실행한다.
+어댑터는 수집기 스키마와 같은 가짜 lake 로 끝까지 시험했다(원공시 선택·정정본 기록·XML 추출·구조 조사).
+
 4. `structure.json` 의 `unmatched`(템플릿 미대응 목차 항목)와 시각화 ⑥ 탭의 'L3 개정 후보'를 보고 `build/author_skeleton.py` 의 템플릿(별칭·업종 변형·L3 항목)을 개정한 뒤 `author_skeleton.py → build.py → render_html.py` 를 재실행한다.
 
 ## 15건에서 확인할 골격 가설 (identity.json 의 expected_variants)
