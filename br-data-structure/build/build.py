@@ -38,6 +38,7 @@ info = load(os.path.join(SK, "info_tree.json"))
 mapping = load(os.path.join(SK, "mapping.json"))
 obs = load(os.path.join(SK, "observation_schema.json"))
 docmap = load(os.path.join(SK, "dart_document_map.json"))
+observations = load(os.path.join(SK, "observations.json")) if os.path.exists(os.path.join(SK, "observations.json")) else {"items": {}, "meta": {}, "vocab": {}}
 sections_findings = load(os.path.join(IN, "derived", "sections_findings.json"))
 status = load(os.path.join(IN, "derived", "report_status.json"))
 types_a = load_jsonl(os.path.join(IN, "aggregate_a0002", "type_catalog.jsonl"))
@@ -264,6 +265,15 @@ for e in mapping["edges"]:
 if missing:
     print("WARNING unmatched mapping ids:", sorted(set(missing)))
 
+# ---------------------------------------------------------------- 관측 카탈로그 부착
+obs_missing = []
+for nid, it in observations["items"].items():
+    if nid not in nodes: obs_missing.append(nid); continue
+    nodes[nid]["subitems"] = [{"code": g["code"], "title": g["title"], "observations": g["observations"]} for g in it["groups"] if g["title"]]
+    nodes[nid]["observations"] = [dict(o, subitem=g["title"]) for g in it["groups"] for o in g["observations"]]
+    nodes[nid]["observation_evidence"] = {"reports": it["evidence_reports"], "level": it["evidence_level"]}
+if obs_missing: print("WARNING 관측 카탈로그의 미대응 노드:", obs_missing[:8])
+
 # ---------------------------------------------------------------- roll-ups
 def rollup(n):
     tot = collections.Counter()
@@ -274,7 +284,9 @@ def rollup(n):
     n["stats"] = {"findings_total": sum(tot.values()), "findings_by_report": dict(tot), "findings_here": len(n["findings"]), "rules_here": len(n["rules"]),
                   "reports_present": [br for br in SURVEYED if n["instances"].get(br, {}).get("present") is True],
                   "reports_empty": [br for br in SURVEYED if n["instances"].get(br, {}).get("present") == "empty"],
-                  "table_types": len(n["table_types"]), "table_types_shared": sum(1 for r in n["table_types"] if len(r["reports"]) >= 2)}
+                  "table_types": len(n["table_types"]), "table_types_shared": sum(1 for r in n["table_types"] if len(r["reports"]) >= 2),
+                  "observations_here": len(n.get("observations") or []), "subitems_here": len(n.get("subitems") or []),
+                  "observations_total": len(n.get("observations") or []) + sum(c["stats"]["observations_total"] for c in n["children"])}
     return tot
 rollup(template["root"])
 
@@ -324,15 +336,17 @@ out = {
              "reports": [{k: v for k, v in reports[br].items() if k != "structure"} for br in ORDER],
              "surveyed": SURVEYED, "pending": PENDING, "batch": status["batch"],
              "counts": {"data_nodes": len(nodes), "info_nodes": len(info_nodes), "mapping_edges": len(mapping["edges"]), "findings": len(findings_index), "rules": len(rules),
-                        "reports_surveyed": len(SURVEYED), "reports_pending": len(PENDING), "table_types": len(table_types), "revision_candidates": len(revision_candidates)}},
+                        "reports_surveyed": len(SURVEYED), "reports_pending": len(PENDING), "table_types": len(table_types), "revision_candidates": len(revision_candidates),
+                        "observations": observations.get("meta", {}).get("observation_count", 0), "subitems": observations.get("meta", {}).get("subitem_count", 0)}},
     "document_map": docmap, "data_tree": template["root"], "structure_layers": template["structure_layers"], "note_topics": template["note_topics"],
     "info_tree": info["root"], "skills": info["skills"], "mapping": {"levels": mapping["levels"], "rules": mapping["rules"], "edge_count": len(mapping["edges"])},
-    "observation_schema": obs, "rules": rules, "findings": findings_index, "table_types": table_types, "revision_candidates": revision_candidates,
+    "observation_schema": obs, "observation_catalog_meta": observations.get("meta", {}), "observation_vocab": observations.get("vocab", {}), "rules": rules, "findings": findings_index, "table_types": table_types, "revision_candidates": revision_candidates,
     "survey_summary": survey_summary,
 }
 p = os.path.join(DIST, "skeleton.json")
 with open(p, "w", encoding="utf-8") as f:
     json.dump(out, f, ensure_ascii=False, indent=1)
+print("관측", observations.get("meta", {}).get("observation_count", 0), "· 세분화 항목", observations.get("meta", {}).get("subitem_count", 0))
 print("data nodes", len(nodes), "| info nodes", len(info_nodes), "| findings", len(findings_index), "located", sum(1 for f in findings_index.values() if f["node"]),
       "| rules", len(rules), "| surveyed", len(SURVEYED), "pending", len(PENDING), "| table types", len(table_types), "| revision candidates", len(revision_candidates))
 print("written", p, os.path.getsize(p), "bytes")

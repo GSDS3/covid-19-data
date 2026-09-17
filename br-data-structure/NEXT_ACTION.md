@@ -3,6 +3,8 @@
 ## 현재 상태 (2026-09-17)
 
 - 골격 v0.2: 데이터 트리 288노드 · 정보 트리 90노드 · 매핑 266간선 · 관측 규약.
+- 관측 카탈로그 v0.1: 235항목에 관측 1,025건, 항목 세분화(Level 4) 20건. Domain Side 양식 엑셀로 출력(`dist/Domain_Side_사업보고서.xlsx`).
+- Depth 정렬 도구(`build/align_depth.py`): 5건 기준 L1 15/15 공통·순서 불일치 0, L2 30/62 공통, 템플릿 미대응 제목 0.
 - 구조 조사 완료 5건(삼성전자 2024, DB손해보험 2023, 셀트리온 2023, 선바이오 2021, NH프라임리츠 2021). 표 유형 1,200여 개, 보고서 2건 이상 공통 유형 140여 개.
 - 미취득 15건: `inputs/reports/BRxxxx/identity.json` 슬롯만 있음. 이 실행환경은 `dart.fss.or.kr`, `opendart.fss.or.kr`, `kind.krx.co.kr` 접속이 조직 egress 정책으로 차단됨(403 CONNECT). 우회하지 않았다.
 
@@ -48,6 +50,14 @@ lake 에 목록만 있고 원문이 없으면 `listed_not_downloaded` 로 표시
 어댑터는 수집기 스키마와 같은 가짜 lake 로 끝까지 시험했다(원공시 선택·정정본 기록·XML 추출·구조 조사).
 
 4. `structure.json` 의 `unmatched`(템플릿 미대응 목차 항목)와 시각화 ⑥ 탭의 'L3 개정 후보'를 보고 `build/author_skeleton.py` 의 템플릿(별칭·업종 변형·L3 항목)을 개정한 뒤 `author_skeleton.py → build.py → render_html.py` 를 재실행한다.
+
+## 원문이 도착하면 할 일 (관측 카탈로그 검증)
+
+1. `survey_structure.py --xml` 으로 구조 조사 → `align_depth.py` 로 Depth 정렬. 여기서 나오는 `unmatched` 와 '단독' 분류가 골격 개정 후보다.
+2. 표 머리글 시그니처를 관측 카탈로그와 대조한다. 카탈로그에 없는 머리글 = 누락 관측, 카탈로그에만 있는 관측 = 서식에는 있으나 미기재.
+   현재 관측 근거는 항목 단위 70 / 절 단위 161 / 없음 4 이므로, 원문이 늘면 '절 단위'를 '항목 단위'로 올리는 것이 1차 목표다.
+3. 한 항목 안에서 grain 이 다른 표가 새로 확인되면 Level 4 를 추가한다(현재 20건).
+4. `author_observations.py` → `author_skeleton.py` → `build.py` → `render_html.py` → `export_domain_side.py` 순으로 재생성.
 
 ## 15건에서 확인할 골격 가설 (identity.json 의 expected_variants)
 

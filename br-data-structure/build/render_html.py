@@ -98,6 +98,9 @@ h2{font-size:16px;margin:18px 0 8px}h3{font-size:14px;margin:14px 0 6px}
 .kids{margin-left:14px;border-left:1px solid var(--line);padding-left:4px}
 .detail{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;max-height:78vh;overflow:auto;position:sticky;top:110px}
 .detail h3{margin-top:12px}
+.nw{white-space:nowrap}
+.sub{border-left:3px solid var(--accent);padding:2px 0 2px 9px;margin:8px 0}
+.sub>.lab{font-weight:600;font-size:13px;margin-bottom:3px}
 .detail .path{font-size:12px;color:var(--text-2);font-family:var(--mono)}
 table{border-collapse:collapse;width:100%;font-size:12.5px}
 th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
@@ -276,8 +279,8 @@ document.getElementById('theme').addEventListener('click',()=>{const r=document.
 function showTab(t){document.querySelector('#nav button[data-tab="'+t+'"]').click();}
 // ---------- overview
 document.getElementById('meta-title').textContent = D.meta.title.replace('사업보고서 공통 데이터체계 골격','');
-document.getElementById('meta-sub').textContent = `생성 ${D.meta.generated_utc} · 구조 조사 ${ORDER.map(r=>RN[r]).join(', ')} · 미취득 ${PENDING.length}건 · 데이터 노드 ${D.meta.counts.data_nodes} · 정보 노드 ${D.meta.counts.info_nodes} · 대응 ${D.meta.counts.mapping_edges} · 발견 ${fmt(D.meta.counts.findings)} · 표 유형 ${fmt(D.meta.counts.table_types)}`;
-const kp=[[D.meta.counts.data_nodes,'데이터 트리 노드(서식 정의)'],[D.meta.counts.info_nodes,'정보 트리 노드'],[D.meta.counts.mapping_edges,'대응 간선(주제+항목)'],[D.meta.counts.findings,'노드에 매단 발견(의미조사 5건)'],[D.meta.counts.table_types,'관찰된 표 유형(구조조사)'],[`${ORDER.length} / ${ORDER.length+PENDING.length}`,'G01 구조 조사 완료 / 표본']];
+document.getElementById('meta-sub').textContent = `생성 ${D.meta.generated_utc} · 구조 조사 ${ORDER.map(r=>RN[r]).join(', ')} · 미취득 ${PENDING.length}건 · 데이터 노드 ${D.meta.counts.data_nodes} · 정보 노드 ${D.meta.counts.info_nodes} · 대응 ${D.meta.counts.mapping_edges} · 발견 ${fmt(D.meta.counts.findings)} · 표 유형 ${fmt(D.meta.counts.table_types)} · 관측 ${fmt(D.meta.counts.observations)}`;
+const kp=[[D.meta.counts.data_nodes,'데이터 트리 노드(서식 정의)'],[D.meta.counts.info_nodes,'정보 트리 노드'],[D.meta.counts.mapping_edges,'대응 간선(주제+항목)'],[D.meta.counts.findings,'노드에 매단 발견(의미조사 5건)'],[D.meta.counts.observations,'항목에 정의한 관측'],[D.meta.counts.table_types,'관찰된 표 유형(구조조사)'],[`${ORDER.length} / ${ORDER.length+PENDING.length}`,'G01 구조 조사 완료 / 표본']];
 document.getElementById('kpis').innerHTML = kp.map(([v,l])=>`<div class="kpi"><div class="v">${fmt(v)}</div><div class="l">${l}</div></div>`).join('');
 document.getElementById('layers').innerHTML = D.document_map.service_layers.map((l,i)=>`<div class="layer ${i===1?'focus':''}"><div class="t">${i+1}. ${esc(l.layer)}</div><div class="h">${esc(l.holds)}</div><div class="r"><b>골격의 역할</b> ${esc(l.tree_role)}</div></div>`).join('');
 document.getElementById('dt-count').textContent = `템플릿 ${D.meta.counts.data_nodes}개 노드 · L1 ${Object.values(DN).filter(n=>n.level===1).length} · L2 ${Object.values(DN).filter(n=>n.level===2).length} · L3 ${Object.values(DN).filter(n=>n.level===3).length}`;
@@ -292,7 +295,7 @@ let sel=null, hl='';
 function presence(n){ return ORDER.map(id=>{const p=(n.instances[id]||{}).present; return `<i class="${p===true?'y':(p==='empty'?'e':(p==='within_parent'?'w':''))} ${hl===id?'hl':''}" title="${RN[id]}: ${p===true?'존재':(p==='empty'?'제목만 있고 비어 있음':(p==='within_parent'?'상위 절에 포함(개별 존재 미판정)':'없음/미대응'))}"></i>`;}).join(''); }
 function fpill(n){const v=n.stats.findings_total; const c=v===0?'f0':v<3?'f1':v<10?'f2':v<30?'f3':'f4'; return `<span class="pill ${c}" title="하위 포함 발견 ${v}건">${v}</span>`;}
 function matches(n,q,scope,onlyF,onlyR){
-  const self = (!q || (n.title+' '+(n.note||'')+' '+(n.grain||'')+' '+n.findings.map(f=>D.findings[f].summary).join(' ')).toLowerCase().includes(q))
+  const self = (!q || (n.title+' '+(n.note||'')+' '+(n.grain||'')+' '+(n.observations||[]).map(o=>o.name+' '+(o.axis||'')).join(' ')+' '+n.findings.map(f=>D.findings[f].summary).join(' ')).toLowerCase().includes(q))
      && (!scope || (scope==='industry'? n.scope.startsWith('industry') : n.scope===scope))
      && (!onlyF || n.stats.findings_total>0) && (!onlyR || n.rules.length>0 || n.children.some(c=>c.rules.length));
   return self;
@@ -328,6 +331,19 @@ function selectD(id, jump){
   const maps = ['item','topic'].map(l=> n.mapping[l].length? `<div><b>${l==='item'?'항목 대응 후보':'주제 연결'}</b> ${n.mapping[l].map(i=>`<span class="chip it" data-it="${i}">${esc(IN[i].code)} ${esc(IN[i].title)}</span>`).join('')}</div>`:'' ).join('');
   const rules = n.rules.map(r=>D.rules.find(x=>x.id===r)).map(r=>`<div class="rule"><div class="lab">${esc(r.label)} <span class="st">${r.id.split('/').pop()} · ${esc(r.state)}</span></div><div class="small">${esc(r.application||r.definition||'')}</div></div>`).join('');
   const she = n.subhead_evidence && Object.keys(n.subhead_evidence).length ? `<h3>소제목 관찰(휴리스틱)</h3><div class="small">${Object.entries(n.subhead_evidence).map(([r,h])=>`<div><b>${RN[r]}</b>: ${h.map(esc).join(' · ')}</div>`).join('')}</div>`:'';
+  const obsRows = (o)=>`<tr><td><b>${esc(o.name)}</b></td><td class="small nw">${esc(o.type)}</td><td class="small nw">${esc(o.unit||'')}</td><td class="small">${esc(o.axis||'')}</td><td class="small">${esc(o.time||'')}</td><td class="small">${esc(o.basis||'')}</td><td class="small muted">${esc(o.note||'')}</td></tr>`;
+  const obsHead = `<tr><th>관측명(측정량)</th><th>유형</th><th>단위</th><th>관측 축</th><th>시간</th><th>범위·기준</th><th>조건·주의</th></tr>`;
+  let obsHtml='';
+  if((n.observations||[]).length){
+    const ev = n.observation_evidence||{};
+    const evTxt = (ev.reports&&ev.reports.length)? `근거 ${ev.reports.map(r=>RN[r]).join(', ')}${ev.level==='절'?' (절 단위 확인)':''}` : '근거: 기업공시서식 기준(초안)';
+    if((n.subitems||[]).length){
+      obsHtml = `<h3>관측 ${n.observations.length} <span class="small muted">· 하위 항목 ${n.subitems.length}개로 세분 · ${evTxt}</span></h3>`
+        + n.subitems.map(g=>`<div class="sub"><div class="lab">${esc(g.code)}. ${esc(g.title)} <span class="small muted">(관측 ${g.observations.length})</span></div><table>${obsHead}${g.observations.map(obsRows).join('')}</table></div>`).join('');
+    } else {
+      obsHtml = `<h3>관측 ${n.observations.length} <span class="small muted">· ${evTxt}</span></h3><table>${obsHead}${n.observations.map(obsRows).join('')}</table>`;
+    }
+  }
   const tts = (n.table_types||[]).slice(0,25);
   const ttHtml = tts.length? `<h3>관찰된 표 유형 ${n.table_types.length}${n.table_types.length>25?' (상위 25)':''}</h3><table><tr><th>캡션(대표)</th><th>보고서</th><th>머리글(대표)</th><th>단위</th><th class="num">건</th></tr>${tts.map(t=>`<tr><td>${esc(t.caption||'(캡션 없음)')}</td><td class="small">${t.reports.map(r=>RN[r]).join(', ')}</td><td class="small mono">${esc(t.header)}</td><td class="small">${esc(t.unit||'')}</td><td class="num">${t.count}</td></tr>`).join('')}</table>`:'';
   document.getElementById('ddetail').innerHTML = `
@@ -339,6 +355,7 @@ function selectD(id, jump){
     ${n.api.length?`<div><b>OpenDART API 대응 후보</b> ${n.api.map(a=>`<span class="chip">${esc(a)}</span>`).join('')} <span class="small muted">(명세 참조, 미검증)</span></div>`:''}
     ${n.xbrl?`<div><b>XBRL</b> <span class="small">${n.xbrl===true?'재무제표 태깅 대응':'부분(태깅 주석 범위에 한함)'}</span></div>`:''}
     ${n.note?`<div class="note">${esc(n.note)}</div>`:''}
+    ${obsHtml}
     <h3>정보 트리 대응</h3>${maps||'<div class="small muted">직접 대응 없음(하위 노드 참조)</div>'}
     <h3>5개 보고서 인스턴스</h3><table><tr><th>보고서</th><th>존재</th><th class="num">표</th><th class="num">셀</th><th class="num">문단</th><th>원문 절 / 소제목</th></tr>${inst}</table>
     ${she}
