@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-골격(skeleton/*.json)에 5개 보고서의 실제 근거(inputs/derived, inputs/aggregate_a0002)를 결합해
-dist/skeleton.json 을 만든다. 이어서 render_html.py 가 dist/index.html 을 생성한다.
+골격(skeleton/*.json)에 보고서 근거를 결합해 dist/skeleton.json 을 만든다.
+
+입력
+- inputs/reports/BRxxxx/structure.json  구조 조사 결과(build/survey_structure.py). 있으면 '조사됨'.
+- inputs/reports/BRxxxx/identity.json   미취득 보고서 슬롯(식별·예상 변형·필요 자료).
+- inputs/derived/sections_findings.json 초기 5건의 셀 단위 의미조사 발견(findings)과 절 귀속.
+- inputs/derived/report_status.json     초기 5건 조사 상태와 문맥 유형 빈도.
+- inputs/aggregate_a0002/, a0001/       통합판 유형·규칙 후보.
 
 결합 규칙
-- 보고서 목차(L1/L2/L3)를 템플릿 노드에 대응한다. L1은 로마숫자, L2는 순번+명칭(별칭 포함),
-  III.2/III.4의 L3는 재무제표 명칭, III.3/III.5의 L3는 주석 제목 키워드 -> 주석 주제 유형.
-- 각 발견(findings)은 귀속된 가장 깊은 절의 템플릿 노드에 매단다.
-- a0002 유형·규칙 후보는 supporting_discoveries 의 발견 ID를 따라 노드에 매단다.
-- 노드별로 보고서 존재 여부, 표·셀·문단 수, 관찰된 소제목을 인스턴스 오버레이로 붙인다.
+- 각 보고서 목차 항목은 structure.json 의 node(템플릿 id)로 노드에 붙는다. 하위가 존재하면 상위도 존재로 집계한다.
+- 발견은 sections_findings 의 절 인덱스(같은 wrapper 목차 순서)를 structure.json 의 node 로 바꿔 매단다.
+- 표 카탈로그는 (노드, 정규화 캡션)으로 묶어 '관찰된 표 유형'을 만들고, L3 제목과 겹치지 않는 공통 유형을 개정 후보로 낸다.
 """
-import json, os, re, collections, datetime
+import json, os, re, collections, datetime, glob
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -24,177 +28,97 @@ def load(p):
         return json.load(f)
 
 def load_jsonl(p):
-    rows = []
+    if not os.path.exists(p):
+        return []
     with open(p, encoding="utf-8") as f:
-        for l in f:
-            if l.strip():
-                rows.append(json.loads(l))
-    return rows
+        return [json.loads(l) for l in f if l.strip()]
 
 template = load(os.path.join(SK, "data_tree_template.json"))
 info = load(os.path.join(SK, "info_tree.json"))
 mapping = load(os.path.join(SK, "mapping.json"))
 obs = load(os.path.join(SK, "observation_schema.json"))
 docmap = load(os.path.join(SK, "dart_document_map.json"))
-sections = load(os.path.join(IN, "derived", "sections_findings.json"))
+sections_findings = load(os.path.join(IN, "derived", "sections_findings.json"))
 status = load(os.path.join(IN, "derived", "report_status.json"))
 types_a = load_jsonl(os.path.join(IN, "aggregate_a0002", "type_catalog.jsonl"))
-types_a0001 = {t["id"].split("/")[-1]: t for t in load_jsonl(os.path.join(IN, "aggregate_a0001", "type_catalog.jsonl"))} if os.path.exists(os.path.join(IN, "aggregate_a0001", "type_catalog.jsonl")) else {}
 rules_a = load_jsonl(os.path.join(IN, "aggregate_a0002", "rule_candidates.jsonl"))
-maps_a = load_jsonl(os.path.join(IN, "aggregate_a0002", "local_global_map.jsonl"))
+types_a0001 = {t["id"].split("/")[-1]: t for t in load_jsonl(os.path.join(IN, "aggregate_a0001", "type_catalog.jsonl"))}
 
-REPORT_ORDER = ["BR0001", "BR0044", "BR0053", "BR0016", "BR0020"]
+# ---------------------------------------------------------------- reports roster
+reports = {}
+for d in sorted(glob.glob(os.path.join(IN, "reports", "BR*"))):
+    br = os.path.basename(d)
+    sp = os.path.join(d, "structure.json"); ip = os.path.join(d, "identity.json")
+    if os.path.exists(sp):
+        st = load(sp)
+        ident = st["identity"]
+        reports[br] = {"id": br, "company": ident.get("company"), "fiscal_year": ident.get("fiscal_year"), "receipt_id": ident.get("receipt_id"),
+                       "sector": ident.get("sector"), "period": ident.get("period"), "surveyed": True, "structure": st,
+                       "survey_depth": st.get("survey", {}).get("depth"), "html_sha256": ident.get("html_sha256")}
+    elif os.path.exists(ip):
+        ident = load(ip)
+        reports[br] = dict(ident, id=br, surveyed=False, structure=None)
+# 초기 5건의 의미조사 상태 병합
+for br, stt in status["reports"].items():
+    if br in reports:
+        reports[br].update({"semantic_survey": {"work_state": stt["work_state"], "coverage": stt["coverage"], "outputs": stt["outputs"], "resume": stt["resume"]}})
+        reports[br].setdefault("sector", stt.get("sector")); reports[br].setdefault("period", stt.get("period"))
+G01_ORDER = ["BR0001", "BR0044", "BR0020", "BR0016", "BR0053", "BR0043", "BR0021", "BR0100", "BR0002", "BR0022", "BR0042", "BR0062", "BR0081", "BR0003", "BR0023", "BR0045", "BR0063", "BR0082", "BR0004", "BR0024"]
+ORDER = [b for b in G01_ORDER if b in reports] + [b for b in sorted(reports) if b not in G01_ORDER]
+SURVEYED = [b for b in ORDER if reports[b]["surveyed"]]
+PENDING = [b for b in ORDER if not reports[b]["surveyed"]]
 
-# ---------------------------------------------------------------- index nodes
+# ---------------------------------------------------------------- index template
 nodes = {}
 def index(n, parent=None):
-    n["parent"] = parent
-    nodes[n["id"]] = n
+    n["parent"] = parent; nodes[n["id"]] = n
+    n["instances"] = {}; n["findings"] = []; n["rules"] = []; n["table_types"] = []
     for c in n["children"]:
         index(c, n["id"])
 index(template["root"])
 
-def child_by_code(nid, code):
-    for c in nodes[nid]["children"]:
-        if c["code"] == code:
-            return c
-    return None
+# ---------------------------------------------------------------- instance overlay from structure.json
+for br in SURVEYED:
+    st = reports[br]["structure"]
+    for x in st["sections"]:
+        nid = x.get("node")
+        if not nid or nid not in nodes:
+            continue
+        if x.get("pos") is None:
+            nodes[nid]["instances"].setdefault(br, {"present": False, "sections": [x["text"]], "counts": None, "subheads": [], "own": True})
+            continue
+        inst = nodes[nid]["instances"].setdefault(br, {"present": True, "sections": [], "counts": {"table": 0, "cell": 0, "paragraph": 0, "image": 0}, "subheads": [], "own": True})
+        inst["sections"].append(x["text"])
+        for k in inst["counts"]:
+            inst["counts"][k] += (x.get("counts") or {}).get(k, 0) or 0
+        inst["subheads"].extend(x.get("subheads") or [])
+    nodes["DT.A001"]["instances"][br] = {"present": True, "sections": ["(문서 전체)"], "counts": None, "subheads": [], "own": True}
 
-ROMAN = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"}
-
-def norm(t):
-    return re.sub(r"[\s·ㆍ()（）\[\]【】]", "", t)
-
-# 주석 제목 -> 주제 유형 (구체적인 키워드부터)
-NOTE_KW = [
-    ("온실가스", "N31"), ("보험", "N30"), ("재보험", "N30"), ("사업결합", "N28"), ("합병", "N28"),
-    ("보고기간후", "N29"), ("보고기간 후", "N29"), ("후속사건", "N29"),
-    ("특수관계", "N27"), ("부문", "N26"), ("영업으로부터창출된현금", "N25"), ("현금흐름", "N25"),
-    ("주당", "N24"), ("기타수익", "N23"), ("기타비용", "N23"), ("기타손익", "N23"), ("금융수익", "N23"), ("금융비용", "N23"), ("금융손익", "N23"), ("파생", "N23"),
-    ("성격별", "N22"), ("판매비", "N22"), ("판관비", "N22"),
-    ("매출액", "N21"), ("매출원가", "N21"), ("수익", "N21"),
-    ("법인세", "N19"), ("정부보조금", "N18"),
-    ("종업원급여", "N17"), ("퇴직급여", "N17"), ("확정급여", "N17"), ("주식기준보상", "N17"),
-    ("우발", "N16"), ("약정", "N16"), ("충당부채", "N16"), ("배출부채", "N16"),
-    ("차입금", "N15"), ("사채", "N15"), ("금융부채", "N15"), ("리스", "N15"),
-    ("매입채무", "N14"), ("지급채무", "N14"), ("계약부채", "N14"), ("기타부채", "N14"), ("미지급", "N14"),
-    ("매각예정", "N13"), ("중단영업", "N13"), ("처분자산집단", "N13"), ("기타자산", "N13"),
-    ("투자부동산", "N12"), ("무형자산", "N11"), ("영업권", "N11"), ("유형자산", "N10"), ("사용권", "N10"),
-    ("관계기업", "N09"), ("공동기업", "N09"), ("종속기업", "N09"), ("지분법", "N09"),
-    ("재고", "N08"), ("매출채권", "N07"), ("기타채권", "N07"), ("미수금", "N07"),
-    ("현금및현금성", "N06"), ("공정가치금융자산", "N06"), ("금융자산의양도", "N06"), ("금융자산", "N06"), ("단기금융", "N06"),
-    ("범주별", "N05"), ("공정가치", "N05"), ("금융상품", "N05"),
-    ("재무위험", "N04"), ("위험관리", "N04"), ("자본관리", "N04"), ("자본위험", "N04"),
-    ("추정", "N03"), ("가정", "N03"), ("회계정책", "N02"), ("회계처리방침", "N02"), ("기준서", "N02"),
-    ("납입자본", "N20"), ("자본금", "N20"), ("이익잉여금", "N20"), ("기타자본", "N20"), ("기타포괄손익누계액", "N20"), ("비지배지분", "N20"), ("자본", "N20"),
-    ("일반", "N01"), ("연결대상", "N01"),
-]
-
-def note_topic(title):
-    t = norm(re.sub(r"^\d{1,2}[.\s]*", "", title)).replace("연결", "")
-    for kw, code in NOTE_KW:
-        if norm(kw) in t:
-            return code
-    return None
-
-STATEMENT_KW = [("포괄손익계산서", "03"), ("손익계산서", "02"), ("재무상태표", "01"), ("자본변동표", "04"), ("현금흐름표", "05"), ("이익잉여금처분", "06"), ("결손금처리", "06")]
-
-def match_l1(text):
-    t = text.strip()
-    if "사 업 보 고 서" in t or t.replace(" ", "") == "사업보고서":
-        return "DT.A001.COVER"
-    if "대표이사" in t:
-        return "DT.A001.CONF"
-    if "전문가" in t:
-        return "DT.A001.EXP"
-    m = re.match(r"([IVX]+)\.", t)
-    if m and m.group(1) in ROMAN:
-        return "DT.A001." + m.group(1)
-    return None
-
-def match_l2(l1id, text):
-    t = text.strip()
-    m = re.match(r"(\d+)\.\s*(.*)", t)
-    if not m:
-        return None
-    ordn, title = m.group(1), m.group(2)
-    l1 = nodes[l1id]
-    # alias match first (업종 변형)
-    for c in l1["children"]:
-        if any(norm(a) == norm(t) for a in c.get("aliases", [])):
-            return c["id"]
-    for c in l1["children"]:
-        if norm(c["title"]) == norm(title):
-            return c["id"]
-    c = child_by_code(l1id, ordn)
-    if c and c["level"] == 2:
-        return c["id"]
-    # fallback: title containment
-    for c in l1["children"]:
-        if norm(title)[:6] and norm(title)[:6] in norm(c["title"]):
-            return c["id"]
-    return None
-
-def match_l3(l2id, text):
-    l2 = nodes[l2id]
-    code2 = l2["code"]
-    l1code = nodes[l2["parent"]]["code"]
-    if l1code == "III" and code2 in ("2", "4"):
-        for kw, code in STATEMENT_KW:
-            if kw in text.replace(" ", ""):
-                c = child_by_code(l2id, code)
-                return c["id"] if c else None
-    if l1code == "III" and code2 in ("3", "5"):
-        code = note_topic(text)
-        if code:
-            c = child_by_code(l2id, code)
-            return c["id"] if c else None
-    return None
-
-# ---------------------------------------------------------------- per-report overlay
-for n in nodes.values():
-    n["instances"] = {}
-    n["findings"] = []
-    n["rules"] = []
-
-section_node = {}  # (br, section_idx) -> node id
-for br in REPORT_ORDER:
-    r = sections[br]
-    secs = r["sections"]
-    cur1 = cur2 = None
-    for i, x in enumerate(secs):
-        nid = None
-        if x["level"] == 1:
-            nid = match_l1(x["text"]); cur1 = nid; cur2 = None
-        elif x["level"] == 2 and cur1:
-            nid = match_l2(cur1, x["text"]); cur2 = nid
-        elif x["level"] == 3 and cur2:
-            nid = match_l3(cur2, x["text"])
-        section_node[(br, i)] = nid
-        if nid and x.get("pos") is not None:
-            inst = nodes[nid]["instances"].setdefault(br, {"present": True, "sections": [], "counts": {"table": 0, "cell": 0, "paragraph": 0, "image": 0}, "subheads": []})
-            inst["sections"].append(x["text"])
-            c = x.get("counts") or {}
-            for k in inst["counts"]:
-                inst["counts"][k] += c.get(k, 0) or 0
-            inst["subheads"].extend(x.get("subheads") or [])
-        elif nid:
-            nodes[nid]["instances"].setdefault(br, {"present": False, "sections": [x["text"]], "counts": None, "subheads": []})
-
-# 존재 여부 판정: 노드 범위 안에 표/셀/문단이 하나도 없으면 '빈 절'(서식상 제목만 존재)
+# 빈 절 판정
 for n in nodes.values():
     for br, inst in n["instances"].items():
-        if inst["present"] and inst["counts"] and sum(inst["counts"].values()) == 0:
+        if inst["present"] is True and inst["counts"] and sum(inst["counts"].values()) == 0:
             inst["present"] = "empty"
 
-# 목차에 대응 절이 없는 템플릿 노드(예: IV·VII·IX·X 의 항목, 각 절의 표 유형 L3)는
-# 상위 절이 존재하면 '상위 절에 포함(개별 존재 미판정)'으로 표시한다.
-# 단, 같은 보고서에서 형제 노드 중 하나라도 목차에서 직접 대응된 것이 있으면(예: 보험업 II장의 F1~F4)
-# 나머지 형제는 '없음'으로 둔다(그 보고서의 절 구성이 다르다는 사실).
-for br in REPORT_ORDER:
-    template["root"]["instances"][br] = {"present": True, "sections": ["(문서 전체)"], "counts": None, "subheads": []}
+# 하위가 존재하면 상위도 존재(집계). 예: 보험업 XII.4.02 가 L3에 직접 대응된 경우 XII.4 도 존재.
+def rollup_presence(n):
+    for c in n["children"]:
+        rollup_presence(c)
+    for br in SURVEYED:
+        if br in n["instances"]:
+            continue
+        kids = [c["instances"][br] for c in n["children"] if br in c["instances"] and c["instances"][br]["present"] in (True, "empty")]
+        if kids:
+            cnt = {"table": 0, "cell": 0, "paragraph": 0, "image": 0}
+            for k in kids:
+                for kk in cnt:
+                    cnt[kk] += (k["counts"] or {}).get(kk, 0)
+            n["instances"][br] = {"present": True if sum(cnt.values()) else "empty", "sections": sum((k["sections"] for k in kids), []), "counts": cnt, "subheads": [], "own": False}
+rollup_presence(template["root"])
+
+# 목차에 대응 절이 없는 템플릿 노드는 상위가 존재하면 '상위 절에 포함'. 형제 중 직접 대응된 것이 있으면 나머지는 '없음'.
 def inherit_presence(n):
-    for br in REPORT_ORDER:
+    for br in SURVEYED:
         if n["instances"].get(br, {}).get("present") is not True:
             continue
         sibling_matched = any(c["instances"].get(br, {}).get("present") in (True, "empty") for c in n["children"])
@@ -202,96 +126,126 @@ def inherit_presence(n):
             continue
         for c in n["children"]:
             if br not in c["instances"]:
-                c["instances"][br] = {"present": "within_parent", "sections": [], "counts": None, "subheads": []}
+                c["instances"][br] = {"present": "within_parent", "sections": [], "counts": None, "subheads": [], "own": False}
     for c in n["children"]:
         inherit_presence(c)
 inherit_presence(template["root"])
 
-# 자식 없는 L3 템플릿 노드의 '소제목 관찰' 휴리스틱
+# 소제목 관찰 휴리스틱 (L3 leaf)
 def key_terms(title):
     parts = re.split(r"[·/()（）,\s]", title)
     return [p for p in parts if len(p) >= 3][:4]
-
 for n in nodes.values():
     if n["level"] == 3 and not n["children"]:
-        parent = nodes[n["parent"]]
-        seen = {}
-        terms = key_terms(n["title"])
+        parent = nodes[n["parent"]]; seen = {}; terms = key_terms(n["title"])
         for br, inst in parent["instances"].items():
             hits = [h for h in inst.get("subheads", []) if any(t in h for t in terms)]
             if hits:
                 seen[br] = hits[:4]
         n["subhead_evidence"] = seen
 
-# ---------------------------------------------------------------- findings
+# ---------------------------------------------------------------- table catalog -> table types
+def norm_caption(c):
+    if not c:
+        return None
+    for _ in range(3):   # '4. 주식의 분포 현황 가. 주식 소유 현황' 처럼 접두 번호가 겹치는 경우
+        c = re.sub(r"^\s*(?:\(?\d{1,2}\)|\d{1,2}\)|\d{1,2}\.|[가-힣]\.|\d{1,2}-\d{1,2}\.|[①-⑳]|□|-|ㅇ|○|◦|■|가\)|나\)|다\)|라\)|마\))\s*", "", c)
+    c = re.sub(r"\(.*?\)", "", c)            # 괄호 안 회사명 등 제거
+    c = re.sub(r"[\s·ㆍ:：\[\]【】]", "", c)
+    c = re.sub(r"(당사|회사|의|등|현황)$", "", c)
+    return c[:40] if c else None
+
+def header_sig(t):
+    h = t.get("header_rows") or []
+    if not h:
+        return None
+    return "hdr:" + "|".join(re.sub(r"[\s·ㆍ]", "", x) for x in h[0] if x)[:60]
+
+tt = collections.defaultdict(lambda: {"reports": collections.OrderedDict(), "captions": collections.Counter(), "headers": collections.Counter(), "units": collections.Counter(), "n": 0, "merged": 0})
+for br in SURVEYED:
+    for t in reports[br]["structure"]["tables"]:
+        if t["kind"] != "data" or not t.get("node"):
+            continue
+        key = (t["node"], norm_caption(t.get("caption")) or header_sig(t) or "(캡션 없음)")
+        rec = tt[key]
+        rec["reports"].setdefault(br, 0); rec["reports"][br] += 1
+        rec["captions"][t.get("caption") or ""] += 1
+        if t.get("header_rows"):
+            rec["headers"][" | ".join(h for h in t["header_rows"][0] if h)[:160]] += 1
+        if t.get("unit"):
+            rec["units"][t["unit"][:40]] += 1
+        rec["n"] += 1; rec["merged"] += 1 if t.get("merged") else 0
+table_types = []
+for (nid, key), rec in tt.items():
+    row = {"node": nid, "key": key, "caption": rec["captions"].most_common(1)[0][0], "reports": list(rec["reports"].keys()), "count": rec["n"],
+           "header": rec["headers"].most_common(1)[0][0] if rec["headers"] else "", "unit": rec["units"].most_common(1)[0][0] if rec["units"] else None,
+           "merged_ratio": round(rec["merged"] / rec["n"], 2)}
+    table_types.append(row)
+    nodes[nid]["table_types"].append(row)
+for n in nodes.values():
+    n["table_types"].sort(key=lambda r: (-len(r["reports"]), -r["count"]))
+# L3 개정 후보: 2개 이상 보고서에서 관찰되고 어느 L3 제목의 핵심어와도 겹치지 않는 표 유형
+revision_candidates = []
+for row in table_types:
+    if len(row["reports"]) < 2 or row["key"] == "(캡션 없음)" or row["key"].startswith("hdr:"):
+        continue
+    n = nodes[row["node"]]
+    pool = n["children"] if n["children"] else [n]
+    key = row["key"]
+    hit = any(any(t and t in key for t in key_terms(c["title"])) or any(t and t in c["title"].replace(" ", "") for t in [key[:4]]) for c in pool)
+    if not hit:
+        revision_candidates.append(dict(row, parent_title=n["title"]))
+revision_candidates.sort(key=lambda r: (-len(r["reports"]), r["node"]))
+
+# ---------------------------------------------------------------- findings (초기 5건 의미조사)
 findings_index = {}
-for br in REPORT_ORDER:
-    r = sections[br]
+for br, r in sections_findings.items():
+    if br not in reports or not reports[br]["surveyed"]:
+        continue
+    st_secs = reports[br]["structure"]["sections"]
+    secs = r["sections"]
     for f in r["findings"]:
-        fid = f"{br}/{f['id']}"
-        nid = None
-        if f.get("section_idx") is not None:
-            nid = section_node.get((br, f["section_idx"]))
-            # deepest matched ancestor: section_idx may be L3 unmatched -> walk up path
-            if nid is None:
-                path = f.get("section_path") or []
-                secs = r["sections"]
-                # find indices of ancestors by text
-                for depth in range(len(path) - 1, -1, -1):
-                    for i, x in enumerate(secs):
-                        if x["text"] == path[depth] and x["level"] == depth + 1 and section_node.get((br, i)):
-                            nid = section_node[(br, i)]; break
-                    if nid:
-                        break
-        rec = {"id": fid, "report": br, "company": r["company"], "local_id": f["id"], "record_type": f.get("record_type"),
-               "summary": f.get("summary"), "evidence": f.get("evidence") or [], "section_path": f.get("section_path") or [],
-               "node": nid, "proposal": f.get("proposal")}
+        fid = f"{br}/{f['id']}"; nid = None
+        si = f.get("section_idx")
+        if si is not None and si < len(st_secs) and norm_caption(st_secs[si]["text"]) == norm_caption(secs[si]["text"]):
+            nid = st_secs[si].get("node")
+            if nid is None:   # 미대응 L3 -> 상위 절
+                for j in range(si - 1, -1, -1):
+                    if st_secs[j]["level"] < st_secs[si]["level"] and st_secs[j].get("node"):
+                        nid = st_secs[j]["node"]; break
+        rec = {"id": fid, "report": br, "company": r["company"], "local_id": f["id"], "record_type": f.get("record_type"), "summary": f.get("summary"),
+               "evidence": f.get("evidence") or [], "section_path": f.get("section_path") or [], "node": nid, "proposal": f.get("proposal")}
         findings_index[fid] = rec
         if nid:
             nodes[nid]["findings"].append(fid)
 
-# ---------------------------------------------------------------- rules (a0002)
+# ---------------------------------------------------------------- rules
 rules = []
 type_by_id = {t["id"]: t for t in types_a}
+A0001_LABELS = {"T0001": "같은 표 안의 대상·연결범위 예외", "T0002": "계획·잠정·기말·지급 사건의 시간 역할", "T0003": "분모·산식이 다른 비율", "T0004": "투자·지배·기초자산의 다단 관계", "T0005": "반복 발생과 기재 충돌", "T0006": "열별 기준 전환과 미적용 정책", "T0007": "대시·공란·명시0·해당없음의 의미 분리"}
 for rl in rules_a:
-    tid = rl.get("type_id")
-    t = type_by_id.get(tid, {})
-    inherited = rl.get("inherited_from")
+    tid = rl.get("type_id"); t = type_by_id.get(tid, {}); inherited = rl.get("inherited_from")
     if inherited and not t:
-        # a0001 승계 규칙: a0001 유형 카탈로그의 정의·지원 발견을 사용
-        t = types_a0001.get(inherited.split("/")[-1].replace("R", "T"), {})
-        tid = t.get("id", tid)
-    rec = {"id": rl["id"], "type_id": tid, "label": t.get("label"), "definition": t.get("definition_draft"),
-           "state": rl.get("state"), "application": rl.get("application") or t.get("definition_draft"), "rejection": rl.get("rejection") or t.get("counterexample_guard"),
-           "failure_handling": rl.get("failure_handling"), "required_context": rl.get("required_context") or t.get("required_context") or [],
-           "counterexample_guard": t.get("counterexample_guard"), "supporting": rl.get("supporting_discoveries") or t.get("local_discoveries") or [],
-           "inherited_from": inherited, "nodes": []}
+        t = types_a0001.get(inherited.split("/")[-1].replace("R", "T"), {}); tid = t.get("id", tid)
+    rec = {"id": rl["id"], "type_id": tid, "label": t.get("label") or A0001_LABELS.get((inherited or "").split("/")[-1].replace("R", "T")),
+           "definition": t.get("definition_draft"), "state": rl.get("state"), "application": rl.get("application") or t.get("definition_draft"),
+           "rejection": rl.get("rejection") or t.get("counterexample_guard"), "failure_handling": rl.get("failure_handling"),
+           "required_context": rl.get("required_context") or t.get("required_context") or [], "counterexample_guard": t.get("counterexample_guard"),
+           "supporting": rl.get("supporting_discoveries") or t.get("local_discoveries") or [], "inherited_from": inherited, "nodes": []}
     for d in rec["supporting"]:
         m = re.match(r"(BR\d{4})/r\d+/finding/(.+)", d)
         if m:
-            fid = f"{m.group(1)}/{m.group(2)}"
-            fr = findings_index.get(fid)
+            fr = findings_index.get(f"{m.group(1)}/{m.group(2)}")
             if fr and fr["node"]:
-                rec["nodes"].append(fr["node"])
-                nodes[fr["node"]]["rules"].append(rl["id"])
-    rec["nodes"] = sorted(set(rec["nodes"]))
-    rules.append(rec)
-# a0001 승계 7개 유형(내용은 a0001 카탈로그에 있으며 여기서는 라벨만 보존)
-A0001_LABELS = {"T0001": "같은 표 안의 대상·연결범위 예외", "T0002": "계획·잠정·기말·지급 사건의 시간 역할", "T0003": "분모·산식이 다른 비율", "T0004": "투자·지배·기초자산의 다단 관계", "T0005": "반복 발생과 기재 충돌", "T0006": "열별 기준 전환과 미적용 정책", "T0007": "대시·공란·명시0·해당없음의 의미 분리"}
-for rec in rules:
-    if rec["inherited_from"] and not rec["label"]:
-        code = rec["inherited_from"].split("/")[-1]
-        rec["label"] = A0001_LABELS.get(code.replace("R", "T"), code)
-        rec["type_id"] = "a0001/type/" + code.replace("R", "T")
-        rec["definition"] = "a0001 후보를 재검증 없이 이력으로 승계(prior_candidate_preserved_not_revalidated)."
+                rec["nodes"].append(fr["node"]); nodes[fr["node"]]["rules"].append(rl["id"])
+    rec["nodes"] = sorted(set(rec["nodes"])); rules.append(rec)
 for n in nodes.values():
     n["rules"] = sorted(set(n["rules"]))
 
-# ---------------------------------------------------------------- mapping onto nodes
+# ---------------------------------------------------------------- mapping
 info_nodes = {}
 def index_it(n, parent=None):
-    n["parent"] = parent; info_nodes[n["id"]] = n
-    n["data_topic"] = []; n["data_item"] = []
+    n["parent"] = parent; info_nodes[n["id"]] = n; n["data_topic"] = []; n["data_item"] = []
     for c in n["children"]:
         index_it(c, n["id"])
 index_it(info["root"])
@@ -316,46 +270,48 @@ def rollup(n):
     for f in n["findings"]:
         tot[findings_index[f]["report"]] += 1
     for c in n["children"]:
-        sub = rollup(c)
-        tot.update(sub)
-    n["stats"] = {"findings_total": sum(tot.values()), "findings_by_report": dict(tot),
-                  "findings_here": len(n["findings"]), "rules_here": len(n["rules"]),
-                  "reports_present": [br for br in REPORT_ORDER if n["instances"].get(br, {}).get("present") is True],
-                  "reports_empty": [br for br in REPORT_ORDER if n["instances"].get(br, {}).get("present") == "empty"]}
+        tot.update(rollup(c))
+    n["stats"] = {"findings_total": sum(tot.values()), "findings_by_report": dict(tot), "findings_here": len(n["findings"]), "rules_here": len(n["rules"]),
+                  "reports_present": [br for br in SURVEYED if n["instances"].get(br, {}).get("present") is True],
+                  "reports_empty": [br for br in SURVEYED if n["instances"].get(br, {}).get("present") == "empty"],
+                  "table_types": len(n["table_types"]), "table_types_shared": sum(1 for r in n["table_types"] if len(r["reports"]) >= 2)}
     return tot
 rollup(template["root"])
 
-# info tree finding counts via mapped data nodes (item > topic)
 def it_stats(n):
     items = set(n["data_item"]); topics = set(n["data_topic"])
     for c in n["children"]:
-        ci, ct = it_stats(c)
-        items |= ci; topics |= ct
+        ci, ct = it_stats(c); items |= ci; topics |= ct
     n["stats"] = {"findings_via_items": sum(nodes[d]["stats"]["findings_here"] for d in items),
                   "findings_via_all": sum(nodes[d]["stats"]["findings_here"] for d in (items | topics)),
-                  "data_nodes_item": len(items), "data_nodes_topic": len(topics),
-                  "rolled_up": bool(n["children"])}
+                  "data_nodes_item": len(items), "data_nodes_topic": len(topics), "rolled_up": bool(n["children"])}
     return items, topics
 it_stats(info["root"])
 
-# observed context type counts -> canonical
-canon = {}
-for c in obs["context_relation_types"]:
-    for s in c["observed_synonyms"]:
-        canon[s] = c["canonical"]
-ctx_counts = collections.defaultdict(lambda: collections.Counter())
-uncanon = collections.Counter()
+# 문맥 유형 정규화 집계
+canon = {s: c["canonical"] for c in obs["context_relation_types"] for s in c["observed_synonyms"]}
+ctx_counts = collections.defaultdict(collections.Counter); uncanon = collections.Counter()
 for br, cc in status["context_type_counts"].items():
     for k, v in cc.items():
-        can = canon.get(k)
-        if can:
-            ctx_counts[can][br] += v
-        else:
-            uncanon[k] += v
+        (ctx_counts[canon[k]].__setitem__(br, ctx_counts[canon[k]][br] + v) if k in canon else uncanon.__setitem__(k, uncanon[k] + v))
 for c in obs["context_relation_types"]:
-    c["observed_count"] = dict(ctx_counts.get(c["canonical"], {}))
-    c["observed_total"] = sum(ctx_counts.get(c["canonical"], {}).values())
+    c["observed_count"] = dict(ctx_counts.get(c["canonical"], {})); c["observed_total"] = sum(ctx_counts.get(c["canonical"], {}).values())
 obs["uncanonical_observed"] = dict(uncanon)
+
+# 구조 조사 요약 (보고서별)
+survey_summary = []
+for br in ORDER:
+    r = reports[br]
+    if r["surveyed"]:
+        st = r["structure"]; s = st["stats"]
+        survey_summary.append({"id": br, "company": r["company"], "fiscal_year": r["fiscal_year"], "sector": r.get("sector"), "period": r.get("period"),
+                               "receipt_id": r.get("receipt_id"), "surveyed": True, "sections": s["sections"], "aligned": s["aligned"], "unmatched": st["unmatched"],
+                               "tables_total": s["tables_total"], "tables_data": sum(1 for t in st["tables"] if t["kind"] == "data"), "html_chars": st["identity"]["html_chars"],
+                               "semantic": r.get("semantic_survey"), "depth": r.get("survey_depth")})
+    else:
+        survey_summary.append({"id": br, "company": r["company"], "fiscal_year": r["fiscal_year"], "sector": r.get("sector"), "period": r.get("period"),
+                               "receipt_id": r.get("receipt_id"), "surveyed": False, "acquisition": r.get("acquisition"), "expected_variants": r.get("expected_variants", []),
+                               "sampling_reason": r.get("sampling_reason"), "planned_depth": r.get("planned_depth")})
 
 # ---------------------------------------------------------------- write
 def strip_parent(n):
@@ -363,35 +319,20 @@ def strip_parent(n):
     for c in n["children"]:
         strip_parent(c)
 strip_parent(template["root"]); strip_parent(info["root"])
-
 out = {
-    "meta": {"generated_utc": datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
-             "title": "사업보고서 공통 데이터체계 골격 v0.1",
-             "reports": [dict(status["reports"][br], id=br) for br in REPORT_ORDER],
-             "batch": status["batch"],
-             "counts": {"data_nodes": len(nodes), "info_nodes": len(info_nodes), "mapping_edges": len(mapping["edges"]), "findings": len(findings_index), "rules": len(rules)}},
-    "document_map": docmap,
-    "data_tree": template["root"],
-    "structure_layers": template["structure_layers"],
-    "note_topics": template["note_topics"],
-    "info_tree": info["root"],
-    "skills": info["skills"],
-    "mapping": {"levels": mapping["levels"], "rules": mapping["rules"], "edge_count": len(mapping["edges"])},
-    "observation_schema": obs,
-    "rules": rules,
-    "findings": findings_index,
+    "meta": {"generated_utc": datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z", "title": "사업보고서 공통 데이터체계 골격 v0.2",
+             "reports": [{k: v for k, v in reports[br].items() if k != "structure"} for br in ORDER],
+             "surveyed": SURVEYED, "pending": PENDING, "batch": status["batch"],
+             "counts": {"data_nodes": len(nodes), "info_nodes": len(info_nodes), "mapping_edges": len(mapping["edges"]), "findings": len(findings_index), "rules": len(rules),
+                        "reports_surveyed": len(SURVEYED), "reports_pending": len(PENDING), "table_types": len(table_types), "revision_candidates": len(revision_candidates)}},
+    "document_map": docmap, "data_tree": template["root"], "structure_layers": template["structure_layers"], "note_topics": template["note_topics"],
+    "info_tree": info["root"], "skills": info["skills"], "mapping": {"levels": mapping["levels"], "rules": mapping["rules"], "edge_count": len(mapping["edges"])},
+    "observation_schema": obs, "rules": rules, "findings": findings_index, "table_types": table_types, "revision_candidates": revision_candidates,
+    "survey_summary": survey_summary,
 }
 p = os.path.join(DIST, "skeleton.json")
 with open(p, "w", encoding="utf-8") as f:
     json.dump(out, f, ensure_ascii=False, indent=1)
-print("data nodes", len(nodes), "| info nodes", len(info_nodes), "| findings", len(findings_index), "| located", sum(1 for f in findings_index.values() if f["node"]), "| rules", len(rules))
+print("data nodes", len(nodes), "| info nodes", len(info_nodes), "| findings", len(findings_index), "located", sum(1 for f in findings_index.values() if f["node"]),
+      "| rules", len(rules), "| surveyed", len(SURVEYED), "pending", len(PENDING), "| table types", len(table_types), "| revision candidates", len(revision_candidates))
 print("written", p, os.path.getsize(p), "bytes")
-# diagnostics: unmatched sections
-unm = collections.Counter()
-for (br, i), nid in section_node.items():
-    if nid is None:
-        x = sections[br]["sections"][i]
-        unm[(x["level"], x["text"][:40])] += 1
-print("unmatched sections:", sum(unm.values()))
-for k, v in list(unm.items())[:40]:
-    print("   ", k, v)

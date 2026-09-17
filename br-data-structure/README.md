@@ -30,13 +30,25 @@ DART 사업보고서(A001)를 대상으로, 전체 서비스(Data Lake → DWH �
 빌드는 발견을 가장 깊은 절의 템플릿 노드에 매달고, 규칙 후보를 지원 발견 경로로 노드에 연결하며,
 보고서별 존재 여부(존재 / 제목만 / 상위 절에 포함 / 없음)를 오버레이한다.
 
+## 두 가지 깊이
+
+| 깊이 | 무엇을 보나 | 어디에 | 상태 |
+|---|---|---|---|
+| 의미 조사(초기 방식) | 셀 단위 역할·문맥·검산·반례 | `inputs/derived/sections_findings.json` (5건, 발견 1,013건) | 5건 모두 부분(paused/blocked), 재개하지 않음 |
+| 구조 조사(현재 방식) | 목차 정렬, 절별 표·셀·문단 수, 소제목, 표 카탈로그(캡션·단위·기준일·머리글·행열·병합) | `inputs/reports/BRxxxx/structure.json` | 5건 완료, 15건 미취득 |
+
+G01 나머지 15건은 골격 검증에 필요한 **구조 조사** 깊이로 진행한다. 절차와 가설은 `NEXT_ACTION.md`.
+이 실행환경에서는 DART 계열 호스트 접속이 조직 정책으로 차단되어 원문을 취득하지 못했다. `inputs/reports/BRxxxx/identity.json` 에 슬롯·필요 자료·예상 변형을 두었다.
+
 ## 재현
 
 ```bash
-python3 build/author_skeleton.py   # skeleton/*.json
-python3 build/build.py             # dist/skeleton.json
-python3 build/render_html.py       # dist/index.html
+python3 build/author_skeleton.py                 # skeleton/*.json
+python3 build/survey_structure.py BRxxxx --html … --wrapper …   # inputs/reports/BRxxxx/structure.json (보고서별)
+python3 build/build.py                           # dist/skeleton.json
+python3 build/render_html.py                     # dist/index.html
 ```
+초기 5건은 `sh build/survey_initial_five.sh` (원문 패키지 경로를 E 로 지정).
 
 ## 확정과 초안의 경계
 

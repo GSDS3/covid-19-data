@@ -136,7 +136,8 @@ footer{color:var(--text-3);font-size:12px;padding:20px 16px;text-align:center}
     <button data-tab="itree">③ 정보 트리</button>
     <button data-tab="map">④ 매핑</button>
     <button data-tab="obs">⑤ 관측 규약·규칙</button>
-    <button data-tab="basis">⑥ 근거·한계</button>
+    <button data-tab="tables">⑥ 표 유형·개정 후보</button>
+    <button data-tab="basis">⑦ 근거·한계·진행</button>
     <button class="theme" id="theme">테마</button>
   </nav>
 </header>
@@ -171,7 +172,7 @@ footer{color:var(--text-3);font-size:12px;padding:20px 16px;text-align:center}
     <span><i style="background:repeating-linear-gradient(45deg,var(--line-2) 0 2px,transparent 2px 4px)"></i>제목만 있고 비어 있음</span>
     <span><i style="background:var(--seq1);border-color:var(--seq2)"></i>상위 절에 포함(개별 존재 미판정)</span>
     <span><i></i>없음/미대응</span>
-    <span>· 5칸 순서: 삼성전자24 · DB손보23 · 셀트리온23 · 선바이오21 · NH리츠21</span>
+    <span id="strip-legend"></span>
     <span>· 파란 알약 = 하위 포함 발견 건수(1–2 / 3–9 / 10–29 / 30+)</span>
     <span>· 보라 알약 = 매달린 규칙 후보 수</span>
   </div>
@@ -218,9 +219,23 @@ footer{color:var(--text-3);font-size:12px;padding:20px 16px;text-align:center}
   <div class="card" style="overflow:auto"><table id="notetopics"></table></div>
 </section>
 
+<section class="tab" id="tab-tables">
+  <h2>골격 아래에서 관찰된 표 유형</h2>
+  <div class="legend"><span>구조 조사에서 수집한 데이터 표를 (노드, 정규화 캡션)으로 묶은 것. 머리글 행이 표 유형의 관측 단위(grain)를 보여준다.</span></div>
+  <div class="toolbar"><input type="search" id="t-q" placeholder="노드·캡션·머리글 검색"><label><input type="checkbox" id="t-shared" checked> 2개 이상 보고서에서 관찰된 유형만</label><select id="t-node"><option value="">장: 전체</option></select></div>
+  <div class="card" style="overflow:auto;max-height:60vh"><table id="ttypes"></table></div>
+  <h2>L3 개정 후보</h2>
+  <div class="legend"><span>2개 이상 보고서에서 같은 캡션으로 관찰됐지만 템플릿 L3 제목의 핵심어와 겹치지 않는 표 유형. 골격에 항목을 추가하거나 별칭을 달 후보.</span></div>
+  <div class="card" style="overflow:auto"><table id="revs"></table></div>
+</section>
+
 <section class="tab" id="tab-basis">
-  <h2>근거가 된 5개 보고서와 조사 상태</h2>
+  <h2>G01 20건 진행 현황: 조사됨 / 미취득</h2>
+  <div class="kpis" id="prog-kpis"></div>
   <div class="card" style="overflow:auto"><table id="reports"></table></div>
+  <h3>미취득 15건: 왜 못 했고 무엇이 필요한가</h3>
+  <div class="card small" id="pending-note"></div>
+  <div class="card" style="overflow:auto"><table id="pending"></table></div>
   <div class="grid2">
     <div class="card"><h3>확정한 것</h3><ul class="small">
       <li>사업보고서 L1(장)·L2(절) 구조: 5개 보고서 wrapper 목차에서 동일하게 확인. 금융업(보험)의 II장 절 구성만 다르다.</li>
@@ -244,7 +259,8 @@ footer{color:var(--text-3);font-size:12px;padding:20px 16px;text-align:center}
 <script type="application/json" id="data">__DATA__</script>
 <script>
 const D = JSON.parse(document.getElementById('data').textContent);
-const RPT = D.meta.reports; const ORDER = RPT.map(r=>r.id);
+const RPT = D.meta.reports; const ORDER = D.meta.surveyed; const PENDING = D.meta.pending;
+const RB = Object.fromEntries(RPT.map(r=>[r.id, r]));
 const RN = Object.fromEntries(RPT.map(r=>[r.id, r.company+' '+String(r.fiscal_year).slice(2)]));
 const fmt = n => (n==null?'–':Number(n).toLocaleString('ko-KR'));
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -260,8 +276,8 @@ document.getElementById('theme').addEventListener('click',()=>{const r=document.
 function showTab(t){document.querySelector('#nav button[data-tab="'+t+'"]').click();}
 // ---------- overview
 document.getElementById('meta-title').textContent = D.meta.title.replace('사업보고서 공통 데이터체계 골격','');
-document.getElementById('meta-sub').textContent = `생성 ${D.meta.generated_utc} · 표본 ${RPT.map(r=>r.company+' '+r.fiscal_year).join(', ')} · 데이터 노드 ${D.meta.counts.data_nodes} · 정보 노드 ${D.meta.counts.info_nodes} · 대응 ${D.meta.counts.mapping_edges} · 발견 ${fmt(D.meta.counts.findings)} · 규칙 후보 ${D.meta.counts.rules}`;
-const kp=[[D.meta.counts.data_nodes,'데이터 트리 노드(서식 정의)'],[D.meta.counts.info_nodes,'정보 트리 노드'],[D.meta.counts.mapping_edges,'대응 간선(주제+항목)'],[D.meta.counts.findings,'노드에 매단 발견(5개 보고서)'],[D.meta.counts.rules,'규칙 후보(a0002)'],[RPT.length,'근거 보고서(모두 부분 조사)']];
+document.getElementById('meta-sub').textContent = `생성 ${D.meta.generated_utc} · 구조 조사 ${ORDER.map(r=>RN[r]).join(', ')} · 미취득 ${PENDING.length}건 · 데이터 노드 ${D.meta.counts.data_nodes} · 정보 노드 ${D.meta.counts.info_nodes} · 대응 ${D.meta.counts.mapping_edges} · 발견 ${fmt(D.meta.counts.findings)} · 표 유형 ${fmt(D.meta.counts.table_types)}`;
+const kp=[[D.meta.counts.data_nodes,'데이터 트리 노드(서식 정의)'],[D.meta.counts.info_nodes,'정보 트리 노드'],[D.meta.counts.mapping_edges,'대응 간선(주제+항목)'],[D.meta.counts.findings,'노드에 매단 발견(의미조사 5건)'],[D.meta.counts.table_types,'관찰된 표 유형(구조조사)'],[`${ORDER.length} / ${ORDER.length+PENDING.length}`,'G01 구조 조사 완료 / 표본']];
 document.getElementById('kpis').innerHTML = kp.map(([v,l])=>`<div class="kpi"><div class="v">${fmt(v)}</div><div class="l">${l}</div></div>`).join('');
 document.getElementById('layers').innerHTML = D.document_map.service_layers.map((l,i)=>`<div class="layer ${i===1?'focus':''}"><div class="t">${i+1}. ${esc(l.layer)}</div><div class="h">${esc(l.holds)}</div><div class="r"><b>골격의 역할</b> ${esc(l.tree_role)}</div></div>`).join('');
 document.getElementById('dt-count').textContent = `템플릿 ${D.meta.counts.data_nodes}개 노드 · L1 ${Object.values(DN).filter(n=>n.level===1).length} · L2 ${Object.values(DN).filter(n=>n.level===2).length} · L3 ${Object.values(DN).filter(n=>n.level===3).length}`;
@@ -270,6 +286,7 @@ document.getElementById('it-count').textContent = `${D.meta.counts.info_nodes}�
 document.getElementById('docmap').innerHTML = D.document_map.groups.map(g=>`<div class="docgroup"><div class="g">${g.code}. ${esc(g.title)} <span class="muted small">(${g.docs.length})</span></div>${g.docs.map(d=>`<div class="doc ${d[3]==='detailed'?'hi':''}"><span class="code">${d[0]}</span><span>${esc(d[1])}</span>${d[2].map(t=>`<span class="tag ${t[0]==='Q'?'q':'x'}">${t}</span>`).join('')}</div>`).join('')}</div>`).join('');
 // ---------- data tree
 const fsel=document.getElementById('f-report'); ORDER.forEach(id=>{const o=document.createElement('option');o.value=id;o.textContent='보고서 강조: '+RN[id];fsel.appendChild(o);});
+document.getElementById('strip-legend').textContent = `· ${ORDER.length}칸 순서: ${ORDER.map(r=>RN[r]).join(' · ')}`;
 const open = new Set(); Object.values(DN).forEach(n=>{ if(n.level<=1) open.add(n.id); });
 let sel=null, hl='';
 function presence(n){ return ORDER.map(id=>{const p=(n.instances[id]||{}).present; return `<i class="${p===true?'y':(p==='empty'?'e':(p==='within_parent'?'w':''))} ${hl===id?'hl':''}" title="${RN[id]}: ${p===true?'존재':(p==='empty'?'제목만 있고 비어 있음':(p==='within_parent'?'상위 절에 포함(개별 존재 미판정)':'없음/미대응'))}"></i>`;}).join(''); }
@@ -311,6 +328,8 @@ function selectD(id, jump){
   const maps = ['item','topic'].map(l=> n.mapping[l].length? `<div><b>${l==='item'?'항목 대응 후보':'주제 연결'}</b> ${n.mapping[l].map(i=>`<span class="chip it" data-it="${i}">${esc(IN[i].code)} ${esc(IN[i].title)}</span>`).join('')}</div>`:'' ).join('');
   const rules = n.rules.map(r=>D.rules.find(x=>x.id===r)).map(r=>`<div class="rule"><div class="lab">${esc(r.label)} <span class="st">${r.id.split('/').pop()} · ${esc(r.state)}</span></div><div class="small">${esc(r.application||r.definition||'')}</div></div>`).join('');
   const she = n.subhead_evidence && Object.keys(n.subhead_evidence).length ? `<h3>소제목 관찰(휴리스틱)</h3><div class="small">${Object.entries(n.subhead_evidence).map(([r,h])=>`<div><b>${RN[r]}</b>: ${h.map(esc).join(' · ')}</div>`).join('')}</div>`:'';
+  const tts = (n.table_types||[]).slice(0,25);
+  const ttHtml = tts.length? `<h3>관찰된 표 유형 ${n.table_types.length}${n.table_types.length>25?' (상위 25)':''}</h3><table><tr><th>캡션(대표)</th><th>보고서</th><th>머리글(대표)</th><th>단위</th><th class="num">건</th></tr>${tts.map(t=>`<tr><td>${esc(t.caption||'(캡션 없음)')}</td><td class="small">${t.reports.map(r=>RN[r]).join(', ')}</td><td class="small mono">${esc(t.header)}</td><td class="small">${esc(t.unit||'')}</td><td class="num">${t.count}</td></tr>`).join('')}</table>`:'';
   document.getElementById('ddetail').innerHTML = `
     <div class="path">${esc(dpath(id))}</div>
     <h2 style="margin:4px 0 6px">${esc(n.title)} <span class="tag">${esc(n.scope)}</span> ${n.structures.map(s=>`<span class="tag">${esc(s)}</span>`).join('')}</h2>
@@ -323,6 +342,7 @@ function selectD(id, jump){
     <h3>정보 트리 대응</h3>${maps||'<div class="small muted">직접 대응 없음(하위 노드 참조)</div>'}
     <h3>5개 보고서 인스턴스</h3><table><tr><th>보고서</th><th>존재</th><th class="num">표</th><th class="num">셀</th><th class="num">문단</th><th>원문 절 / 소제목</th></tr>${inst}</table>
     ${she}
+    ${ttHtml}
     <h3>규칙 후보 ${n.rules.length}</h3>${rules||'<div class="small muted">이 노드에 직접 매달린 규칙 없음</div>'}
     <h3>발견 ${fl.length}${subF?` <span class="small muted">(하위 노드에 ${subF}건 더)</span>`:''}</h3>
     ${fl.slice(0,60).map(f=>`<div class="finding"><div class="id">${f.company} · ${f.local_id} · ${esc(f.record_type||'')} · ${f.evidence.slice(0,3).join(', ')}</div>${esc(f.summary)}${f.proposal?`<details><summary>제안</summary>${esc(f.proposal)}</details>`:''}</div>`).join('')}${fl.length>60?`<div class="small muted">… ${fl.length-60}건 더</div>`:''}`;
@@ -377,10 +397,27 @@ function selectI(id){
   document.getElementById('rules').querySelectorAll('[data-dt]').forEach(el=>el.addEventListener('click',()=>{showTab('dtree');selectD(el.dataset.dt,true);}));
   document.getElementById('notetopics').innerHTML=`<tr><th>코드</th><th>주제</th><th>내용</th><th>필수 문맥</th><th>키워드</th></tr>`+D.note_topics.map(t=>`<tr><td class="mono">${t.code}</td><td><b>${esc(t.title)}</b></td><td class="small">${esc(t.desc)}</td><td class="small">${t.contexts.map(esc).join(' · ')}</td><td class="small muted">${t.keywords.join(', ')}</td></tr>`).join('');
 })();
+// ---------- table types tab
+(function(){
+  const sel=document.getElementById('t-node'); D.data_tree.children.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.code+' '+c.title;sel.appendChild(o);});
+  function render(){
+    const q=document.getElementById('t-q').value.toLowerCase(), sh=document.getElementById('t-shared').checked, nd=sel.value;
+    const rows=D.table_types.filter(t=>(!sh||t.reports.length>=2)&&(!nd||t.node.startsWith(nd))&&(!q||(dpath(t.node)+(t.caption||'')+t.header+DN[t.node].title).toLowerCase().includes(q))).sort((a,b)=>b.reports.length-a.reports.length||a.node.localeCompare(b.node));
+    document.getElementById('ttypes').innerHTML=`<tr><th>노드</th><th>캡션(대표)</th><th class="num">보고서</th><th>머리글(대표 첫 행)</th><th>단위</th><th class="num">건</th></tr>`+rows.slice(0,500).map(t=>`<tr><td><span class="chip dt" data-dt="${t.node}">${esc(dpath(t.node))}</span> <span class="small">${esc(DN[t.node].title).slice(0,22)}</span></td><td>${esc(t.caption||'(캡션 없음)')}</td><td class="num" title="${t.reports.map(r=>RN[r]).join(', ')}">${t.reports.length}</td><td class="small mono">${esc(t.header)}</td><td class="small">${esc(t.unit||'')}</td><td class="num">${t.count}</td></tr>`).join('')+(rows.length>500?`<tr><td colspan="6" class="muted">… ${rows.length-500}건 더</td></tr>`:'');
+    document.getElementById('ttypes').querySelectorAll('[data-dt]').forEach(el=>el.addEventListener('click',()=>{showTab('dtree');selectD(el.dataset.dt,true);}));
+  }
+  ['t-q','t-shared','t-node'].forEach(id=>document.getElementById(id).addEventListener('input',render)); render();
+  document.getElementById('revs').innerHTML=`<tr><th>노드</th><th>관찰 캡션</th><th class="num">보고서</th><th>머리글</th><th>제안</th></tr>`+(D.revision_candidates.length?D.revision_candidates.map(r=>`<tr><td><span class="chip dt" data-dt="${r.node}">${esc(dpath(r.node))}</span> ${esc(r.parent_title).slice(0,20)}</td><td>${esc(r.caption)}</td><td class="num">${r.reports.length}</td><td class="small mono">${esc(r.header)}</td><td class="small">L3 항목 추가 또는 기존 항목 별칭 등록 검토</td></tr>`).join(''):'<tr><td colspan="5" class="muted">없음</td></tr>');
+  document.getElementById('revs').querySelectorAll('[data-dt]').forEach(el=>el.addEventListener('click',()=>{showTab('dtree');selectD(el.dataset.dt,true);}));
+})();
 // ---------- basis
 (function(){
-  document.getElementById('reports').innerHTML=`<tr><th>ID</th><th>회사·연도</th><th>업종</th><th>접수번호</th><th>사업기간</th><th>상태</th><th class="num">셀 판별/전체</th><th class="num">표</th><th class="num">문단</th><th class="num">발견</th><th>재개 위치·한계</th></tr>`+RPT.map(r=>`<tr><td class="mono">${r.id}</td><td>${esc(r.company)} ${r.fiscal_year}</td><td class="small">${esc(r.sector)}</td><td class="mono">${r.receipt_id}</td><td class="small">${esc(r.period)}</td><td>${r.work_state==='paused'?'<span class="status-warn">paused</span>':'<span class="status-bad">blocked</span>'}</td><td class="num">${fmt(r.coverage.physical_cell[0])} / ${fmt(r.coverage.physical_cell[1])}</td><td class="num">${fmt(r.coverage.table[0])}/${fmt(r.coverage.table[1])}</td><td class="num">${fmt(r.coverage.prose_span[0])}/${fmt(r.coverage.prose_span[1])}</td><td class="num">${fmt(r.outputs.findings)}</td><td class="small">${esc(r.resume)}</td></tr>`).join('')+`<tr><td colspan="11" class="small muted">배치 G01: 20건 중 착수 ${D.meta.batch.attempted}, paused ${D.meta.batch.paused}, blocked ${D.meta.batch.blocked}, 미착수 ${D.meta.batch.not_started}, 전수완료 ${D.meta.batch.fully_reviewed}. 표본 계획: ${esc(D.meta.batch.sample_plan)}. '셀 판별' 수는 작성자별 완료 기준이 달라 기업 간 비교하지 않는다.</td></tr>`;
-  document.getElementById('method').innerHTML=`<ol><li><b>골격</b>: 5개 보고서의 DART wrapper 목차(node1/node2/node3)와 본문 앵커(&lt;A name='tocN'&gt;), XBRL 표그룹 제목으로 장·절·주석 위치를 원문 문자 위치(줄바꿈 포함 코드포인트 기준, nodes.jsonl 과 동일 기준)로 확정했다.</li><li><b>L3 항목·표 유형</b>: 절 안의 '가./(1)/1)/[ ]' 형식 소제목을 5개 보고서에서 집계해 공통 항목을 잡고, 기업공시서식 작성기준의 표 구성으로 보완했다. 주석은 회사별 번호가 달라 '주제 유형' 31개로 두었다.</li><li><b>살</b>: 단건 findings.jsonl 의 근거 노드(E번호) 위치를 절 범위와 대조해 각 발견을 가장 깊은 절의 템플릿 노드에 매달았다. a0002 규칙·유형 후보는 supporting_discoveries 의 발견을 따라 노드에 연결했다.</li><li><b>인스턴스 오버레이</b>: 절 범위 안의 표·셀·문단 노드 수를 세어 '존재/제목만/없음'을 판정했다.</li><li><b>정보 트리·매핑</b>: TGT v5 04장 원칙(단일 부모, 2수준 대응)과 PPT 슬라이드 13 예시를 따라 초안을 작성했다. 스킬 배지는 TGT 12장 5개 스킬의 입력 요구를 거칠게 표시한 것이다.</li></ol><div class="muted">재현: build/author_skeleton.py → build/build.py → build/render_html.py. 입력: inputs/derived/*.json, inputs/aggregate_a0002/*.jsonl.</div>`;
+  const S=D.survey_summary; const sv=S.filter(r=>r.surveyed), pd=S.filter(r=>!r.surveyed);
+  document.getElementById('prog-kpis').innerHTML=[[sv.length,'구조 조사 완료(골격에 매달림)'],[sv.filter(r=>r.semantic).length,'셀 단위 의미조사 존재(모두 부분)'],[pd.length,'미취득(원문 접근 차단)'],[D.meta.counts.revision_candidates,'L3 개정 후보'],[sv.reduce((a,r)=>a+r.unmatched.length,0),'템플릿 미대응 목차 항목']].map(([v,l])=>`<div class="kpi"><div class="v">${fmt(v)}</div><div class="l">${l}</div></div>`).join('');
+  document.getElementById('reports').innerHTML=`<tr><th>ID</th><th>회사·연도</th><th>업종</th><th>접수번호</th><th>사업기간</th><th>구조 조사</th><th class="num">목차 정렬</th><th class="num">데이터 표</th><th>의미조사</th><th class="num">발견</th><th>재개 위치·한계</th></tr>`+sv.map(r=>`<tr><td class="mono">${r.id}</td><td>${esc(r.company)} ${r.fiscal_year}</td><td class="small">${esc(r.sector||'')}</td><td class="mono">${r.receipt_id||'–'}</td><td class="small">${esc(r.period||'')}</td><td><span class="status-good">완료</span></td><td class="num">${r.aligned}/${r.sections}</td><td class="num">${fmt(r.tables_data)}</td><td>${r.semantic?(r.semantic.work_state==='paused'?'<span class="status-warn">paused</span>':'<span class="status-bad">blocked</span>'):'<span class="muted">없음</span>'}</td><td class="num">${r.semantic?fmt(r.semantic.outputs.findings):'–'}</td><td class="small">${esc(r.semantic?r.semantic.resume:'')}</td></tr>`).join('')+`<tr><td colspan="11" class="small muted">의미조사 열은 초기 5건의 셀 단위 조사 상태(batch G01: 착수 ${D.meta.batch.attempted}, paused ${D.meta.batch.paused}, blocked ${D.meta.batch.blocked}, 전수완료 ${D.meta.batch.fully_reviewed}). 구조 조사는 목차 정렬·절별 구조 통계·표 카탈로그까지이며 셀 단위 의미 판별을 포함하지 않는다.</td></tr>`;
+  document.getElementById('pending-note').innerHTML = pd.length? `<b>${esc(pd[0].acquisition.reason)}</b><div style="margin-top:6px">필요 자료: ${pd[0].acquisition.needed.map(esc).join(' / ')} → <span class="mono">python3 build/survey_structure.py BRxxxx --html … --wrapper …</span> 실행 후 <span class="mono">build.py → render_html.py</span>. 셀 단위 의미조사는 하지 않는다(${esc(pd[0].planned_depth)}).</div>`:'미취득 보고서 없음';
+  document.getElementById('pending').innerHTML=`<tr><th>ID</th><th>회사·연도</th><th>업종</th><th>사업기간</th><th>표본 선정 이유</th><th>골격 검증에서 기대하는 변형(가설, 미검증)</th></tr>`+pd.map(r=>`<tr><td class="mono">${r.id}</td><td>${esc(r.company)} ${r.fiscal_year}</td><td class="small">${esc(r.sector||'')}</td><td class="small">${esc(r.period||'')}</td><td class="small">${esc(r.sampling_reason||'')}</td><td class="small">${(r.expected_variants||[]).map(v=>`<div>· ${esc(v)}</div>`).join('')}</td></tr>`).join('');
+  document.getElementById('method').innerHTML=`<ol><li><b>골격</b>: 5개 보고서의 DART wrapper 목차(node1/node2/node3)와 본문 앵커(&lt;A name='tocN'&gt;), XBRL 표그룹 제목으로 장·절·주석 위치를 원문 문자 위치(줄바꿈 포함 코드포인트 기준, nodes.jsonl 과 동일 기준)로 확정했다.</li><li><b>L3 항목·표 유형</b>: 절 안의 '가./(1)/1)/[ ]' 형식 소제목을 5개 보고서에서 집계해 공통 항목을 잡고, 기업공시서식 작성기준의 표 구성으로 보완했다. 주석은 회사별 번호가 달라 '주제 유형' 31개로 두었다.</li><li><b>구조 조사(깊이 조정)</b>: 나머지 표본은 셀 단위 의미 판별 대신 build/survey_structure.py 로 목차 정렬·절별 표/셀/문단 수·소제목·표 카탈로그(캡션·단위·기준일·머리글 행·행열 수·병합)만 수집한다. 골격의 검증·확장에 필요한 깊이이며, 의미조사는 골격이 안정된 뒤 표 유형 단위로 재개한다.</li><li><b>살</b>: 초기 5건의 findings.jsonl 근거 노드 위치를 절 범위와 대조해 각 발견을 가장 깊은 절의 템플릿 노드에 매달았다. a0002 규칙·유형 후보는 supporting_discoveries 의 발견을 따라 노드에 연결했다. 표 유형은 (노드, 정규화 캡션)으로 묶어 보고서 간 공통성을 세었다.</li><li><b>인스턴스 오버레이</b>: 절 범위 안의 표·셀·문단 수를 세어 '존재/제목만/상위 절에 포함/없음'을 판정했다. 하위가 존재하면 상위도 존재로 집계한다.</li><li><b>정보 트리·매핑</b>: TGT v5 04장 원칙(단일 부모, 2수준 대응)과 PPT 슬라이드 13 예시를 따라 초안을 작성했다. 스킬 배지는 TGT 12장 5개 스킬의 입력 요구를 거칠게 표시한 것이다.</li></ol><div class="muted">재현: build/author_skeleton.py → build/survey_structure.py(보고서별) → build/build.py → build/render_html.py. 입력: inputs/reports/BRxxxx/{structure,identity}.json, inputs/derived/*.json, inputs/aggregate_*/*.jsonl.</div>`;
 })();
 renderDTree(); renderITree();
 (function(){ // #tab=dtree&d=DT.A001.III.6.02&i=IT.3.6

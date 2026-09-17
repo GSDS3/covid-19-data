@@ -1,0 +1,22 @@
+{
+ "sample_id": "BR0062",
+ "company": "대동",
+ "fiscal_year": 2024,
+ "period": "2024-01-01~2024-12-31",
+ "sector": "기계(농기계, 중견)",
+ "sampling_reason": "농기계 제조·수출·중견기업의 사업·연결·재고·판매보증 구조",
+ "receipt_id": null,
+ "acquisition": {
+  "state": "not_acquired",
+  "reason": "이 실행환경에서 dart.fss.or.kr 등 공시 호스트로의 접속이 조직 egress 정책으로 차단됨(403). 원문 HTML과 wrapper(또는 acquisition.json)를 별도 제공받아 build/survey_structure.py 로 조사한다.",
+  "needed": [
+   "html/BRxxxx_*.html(본문, 이미지 내장본 또는 원 응답)",
+   "evidence/BRxxxx/wrapper.html 또는 acquisition.json(wrapper_toc)"
+  ]
+ },
+ "planned_depth": "structural_survey (목차 정렬·절별 구조 통계·소제목·표 카탈로그). 셀 단위 의미 판별은 이번 범위 밖.",
+ "expected_variants": [
+  "I.1.06 중견기업 표시, II.4 수출 비중, 판매보증(N16)"
+ ],
+ "status": "pending"
+}
